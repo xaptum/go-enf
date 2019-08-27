@@ -1,4 +1,3 @@
-module github.com/xaptum/go-enf/v1
+module github.com/xaptum/go-enf
 
-require (
-)
+go 1.12
