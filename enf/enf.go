@@ -20,6 +20,8 @@ const (
 
 	headerToken       = "Authorization"
 	headerTokenFormat = "Bearer %s"
+
+	mediaTypeJson = "application/json"
 )
 
 var (
