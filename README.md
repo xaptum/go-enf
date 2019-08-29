@@ -63,11 +63,11 @@ client.ApiToken = *auth.Token
 In general, go-enf follows [semver](https://semver.org/) as closely as
 possibly for tagging releases.
 
-- Increment the *major version* for incompatible changes to the Go API
+- Increment the **major version** for incompatible changes to the Go API
   or behavior.
-- Increment the *minor version* for backwards-compatible changes to
+- Increment the **minor version** for backwards-compatible changes to
   the functionality.
-- Increment the *patch version* for backwards-compatible bug fixes.
+- Increment the **patch version** for backwards-compatible bug fixes.
 
 ## License ##
 Copyright 2019 Xaptum, Inc.
