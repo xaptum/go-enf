@@ -175,9 +175,6 @@ func CheckResponse(r *http.Response) error {
 		return nil
 	}
 
-	type R struct {
-	}
-
 	errorResponse := &ErrorResponse{Response: r}
 	data, err := ioutil.ReadAll(r.Body)
 	if err == nil && data != nil {
