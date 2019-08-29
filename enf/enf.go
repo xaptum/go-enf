@@ -197,7 +197,7 @@ func Int(v int) *int { return &v }
 
 // Int64 is a helper function that creates a new value and returns a
 // pointer to it.
-func Int64(v int) *int { return &v }
+func Int64(v int64) *int64 { return &v }
 
 // String is a helper function that creates a new value and returns a
 // pointer to it.
