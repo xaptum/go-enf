@@ -75,7 +75,7 @@ func TestFirewallService_CreateRule(t *testing.T) {
 	wantContentTypeHeaders := []string{mediaTypeJson}
 	mux.HandleFunc("/api/xfw/v1/N/rule", func(w http.ResponseWriter, r *http.Request) {
 		v := new(FirewallRuleRequest)
-		json.NewDecoder(r.Body).Decode(v)
+		_ = json.NewDecoder(r.Body).Decode(v)
 
 		testMethod(t, r, "POST")
 		testHeader(t, r, "Accept", strings.Join(wantAcceptHeaders, ", "))

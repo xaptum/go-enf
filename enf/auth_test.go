@@ -23,7 +23,7 @@ func TestAuthService_Authenticate(t *testing.T) {
 	wantContentTypeHeaders := []string{mediaTypeJson}
 	mux.HandleFunc("/api/xcr/v2/xauth", func(w http.ResponseWriter, r *http.Request) {
 		v := new(AuthRequest)
-		json.NewDecoder(r.Body).Decode(v)
+		_ = json.NewDecoder(r.Body).Decode(v)
 
 		testMethod(t, r, "POST")
 		testHeader(t, r, "Accept", strings.Join(wantAcceptHeaders, ", "))
