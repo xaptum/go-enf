@@ -9,15 +9,70 @@ go-enf is a Go client library for accessing the
 
 ## Usage ##
 
-TODO
+```go
+import "github.com/xaptum/go-enf/v0/enf" // with go modules enabled (G0111MODULE=on or outside GOPATH)
+import "github.com/xaptum/go-enf/enf"    // with go modules disabled
+```
 
-## Integration Tests ##
+Construct a new ENF client, then use the various services on the
+client to access different parts of the ENF API. For example:
 
-TODO
+``` go
+const (
+    domain = https://demo.xaptum.io
+)
+
+// Create a client
+client := enf.NewClient(domain, nil)
+
+// List all firewall rules in a network
+rules, _, err := client.Firewall.ListRules(context.Background(), "fd00:8f80:0:1::/64")
+```
+
+The various services in the client correspond to the structure of the
+ENF API documentation and the
+[enfcli](https://github.com/xaptum/enfcli) commands.
+
+### Authentication
+
+If set, the `Client.ApiToken` member will be included as the
+authorization token for each request. Some ENF API endpoints do not
+require authentication, so setting this member is optional.
+
+Use the `Client.Auth` service to request an authorization token using
+your username and password.
+
+``` go
+const (
+    username = "user1"
+    password = "password1"
+)
+
+// Get an authentication token
+authReq := &enf.AuthRequest{Username: &username, Password: &password}
+auth, _, _ := client.Auth.Authenticate(context.Background(), authReq)
+if err != nil {
+    // Handle error
+}
+
+client.ApiToken = *auth.Token
+```
+
+## Tests ##
+
+
+
 
 ## Versioning ##
 
-TODO
+In general, go-enf follows [semver](https://semver.org/) as closely as
+possibly for tagging releases.
+
+- Increment the _major version_ for incompatible changes to the Go API
+  or behavior.
+- Increment the _minor version_ for backwards-compatible changes to
+  the functionality.
+- Increment the patch version for backwards-compatible bug fixes.
 
 ## License ##
 Copyright 2019 Xaptum, Inc.
