@@ -31,10 +31,31 @@ func (s *NetworkService) ListNetworks(ctx context.Context, domain string) ([]*Ne
 		Data []*Network             `json:"data"`
 		Page map[string]interface{} `json:"page"`
 	}{}
+
 	resp, err := s.client.Do(ctx, req, body)
 	if err != nil {
 		return nil, resp, err
 	}
 
 	return body.Data, resp, nil
+}
+
+func (s *NetworkService) GetNetwork(ctx context.Context, network string) (*Network, *http.Response, error) {
+	path := fmt.Sprintf("api/xcr/v2/nws/%s", network)
+	req, err := s.client.NewRequest("GET", path, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	body := &struct {
+		Data []*Network             `json:"data"`
+		Page map[string]interface{} `json:"page"`
+	}{}
+
+	resp, err := s.client.Do(ctx, req, body)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return body.Data[0], resp, nil
 }
