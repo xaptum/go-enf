@@ -65,3 +65,44 @@ func TestNetworkService_ListNetworks(t *testing.T) {
 		t.Errorf("Network.ListNetworks returned %+v, want %+v", networks, want)
 	}
 }
+
+func TestNetworkService_GetNetwork(t *testing.T) {
+	client, mux, teardown := setup()
+	defer teardown()
+
+	wantAcceptHeaders := []string{mediaTypeJson}
+	mux.HandleFunc("/api/xcr/v2/nws/N/n", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		testHeader(t, r, "Accept", strings.Join(wantAcceptHeaders, ", "))
+		fmt.Fprint(w, `{
+				"data": [
+				  {
+					"name": "TestNetwork 1",
+					"network": "N/n",
+					"description": "This is a network.",
+					"status": "ACTIVE"
+				  }
+				],
+				"page": {
+				  "curr": -1,
+				  "next": -1,
+				  "prev": -1
+				}
+			  }
+			`)
+	})
+	network, _, err := client.Network.GetNetwork(context.Background(), "N/n")
+	if err != nil {
+		t.Errorf("Network.GetNetwork returned error: %v", err)
+	}
+
+	want := &Network{
+		Name:        String("TestNetwork 1"),
+		Network:     String("N/n"),
+		Description: String("This is a network."),
+		Status:      String("ACTIVE"),
+	}
+	if !reflect.DeepEqual(network, want) {
+		t.Errorf("Network.GetNetwork returned %+v, want %+v", network, want)
+	}
+}
