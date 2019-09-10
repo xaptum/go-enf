@@ -11,7 +11,7 @@ import (
 // under each domain.
 type NetworkService service
 
-// NetworkRequest is used to create a new network in Network.CreateNetwork.
+// NetworkRequest is used to create a new network or update the information of an existing one.
 type NetworkRequest struct {
 	Name        *string `json:"name"`
 	Description *string `json:"description"`
@@ -25,9 +25,9 @@ type Network struct {
 	Status      *string `json:"status"`
 }
 
-// networkresponse represents the typical API response for all
+// networkResponse represents the typical API response for all
 // the endpoints in the xcr namespace
-type networkresponse struct {
+type networkResponse struct {
 	Data []*Network             `json:"data"`
 	Page map[string]interface{} `json:"page"`
 }
@@ -40,7 +40,7 @@ func (s *NetworkService) ListNetworks(ctx context.Context, domain string) ([]*Ne
 		return nil, nil, err
 	}
 
-	body := new(networkresponse)
+	body := new(networkResponse)
 
 	resp, err := s.client.Do(ctx, req, body)
 	if err != nil {
@@ -59,24 +59,34 @@ func (s *NetworkService) GetNetwork(ctx context.Context, network string) (*Netwo
 		return nil, nil, err
 	}
 
-	body := new(networkresponse)
-	resp, err := s.client.Do(ctx, req, body)
-	if err != nil {
-		return nil, resp, err
-	}
-
-	return body.Data[0], resp, nil
+	return s.getFirstNetwork(ctx, req)
 }
 
-// CreateNetwork creates a network under the given domain.
-func (s *NetworkService) CreateNetwork(ctx context.Context, domain string, network *NetworkRequest) (*Network, *http.Response, error) {
+// CreateNetwork creates a network with the given fields under the given domain.
+func (s *NetworkService) CreateNetwork(ctx context.Context, domain string, fields *NetworkRequest) (*Network, *http.Response, error) {
 	path := fmt.Sprintf("api/xcr/v2/domains/%v/nws", domain)
-	req, err := s.client.NewRequest("POST", path, network)
+	req, err := s.client.NewRequest("POST", path, fields)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	body := new(networkresponse)
+	return s.getFirstNetwork(ctx, req)
+}
+
+// UpdateNetwork updates the name and/or description of an existing network.
+func (s *NetworkService) UpdateNetwork(ctx context.Context, network string, fields *NetworkRequest) (*Network, *http.Response, error) {
+	path := fmt.Sprintf("api/xcr/v2/nws/%s", network)
+	req, err := s.client.NewRequest("PUT", path, fields)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return s.getFirstNetwork(ctx, req)
+}
+
+// getFirstNetwork makes an HTTP request and returns the first Network object in the response.
+func (s *NetworkService) getFirstNetwork(ctx context.Context, req *http.Request) (*Network, *http.Response, error) {
+	body := new(networkResponse)
 
 	resp, err := s.client.Do(ctx, req, body)
 	if err != nil {
