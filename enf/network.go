@@ -25,9 +25,9 @@ type Network struct {
 	Status      *string `json:"status"`
 }
 
-// NetworkResponse represents the typical API response for all
-// the endpoints related to the Network resource.
-type NetworkResponse struct {
+// networkresponse represents the typical API response for all
+// the endpoints in the xcr namespace
+type networkresponse struct {
 	Data []*Network             `json:"data"`
 	Page map[string]interface{} `json:"page"`
 }
@@ -40,7 +40,7 @@ func (s *NetworkService) ListNetworks(ctx context.Context, domain string) ([]*Ne
 		return nil, nil, err
 	}
 
-	body := new(NetworkResponse)
+	body := new(networkresponse)
 
 	resp, err := s.client.Do(ctx, req, body)
 	if err != nil {
@@ -59,8 +59,7 @@ func (s *NetworkService) GetNetwork(ctx context.Context, network string) (*Netwo
 		return nil, nil, err
 	}
 
-	body := new(NetworkResponse)
-
+	body := new(networkresponse)
 	resp, err := s.client.Do(ctx, req, body)
 	if err != nil {
 		return nil, resp, err
@@ -77,7 +76,7 @@ func (s *NetworkService) CreateNetwork(ctx context.Context, domain string, netwo
 		return nil, nil, err
 	}
 
-	body := new(NetworkResponse)
+	body := new(networkresponse)
 
 	resp, err := s.client.Do(ctx, req, body)
 	if err != nil {
