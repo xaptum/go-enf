@@ -171,33 +171,6 @@ func TestNetworkService_UpdateNetwork(t *testing.T) {
 	wantAcceptHeaders := []string{mediaTypeJson}
 	wantContentTypeHeaders := []string{mediaTypeJson}
 
-	// mock out creating the network
-	mux.HandleFunc("/api/xcr/v2/domains/1/nws", func(w http.ResponseWriter, r *http.Request) {
-		v := new(NetworkRequest)
-		_ = json.NewDecoder(r.Body).Decode(v)
-
-		testMethod(t, r, "POST")
-		testHeader(t, r, "Accept", strings.Join(wantAcceptHeaders, ", "))
-		testHeader(t, r, "Content-Type", strings.Join(wantContentTypeHeaders, ", "))
-
-		fmt.Fprint(w, `{
-			"data": [
-			  {
-				"name": "TestNetwork 1",
-				"network": "N/n",
-				"description": "This is a network.",
-				"status": "ACTIVE"
-				}
-			],
-			"page": {
-			  "curr": -1,
-			  "next": -1,
-			  "prev": -1
-			}
-		  }
-			`)
-	})
-
 	// expected body for PUT endpoint
 	input := &NetworkRequest{
 		Name:        String("TestNetwork 334"),
@@ -233,21 +206,13 @@ func TestNetworkService_UpdateNetwork(t *testing.T) {
 	`)
 	})
 
-	networkReq := &NetworkRequest{
-		Name:        String("TestNetwork 1"),
-		Description: String("This is a network."),
-	}
-
-	// first, "create" a new network
-	network, _, _ := client.Network.CreateNetwork(context.Background(), "1", networkReq)
-
 	fields := &NetworkRequest{
 		Name:        String("TestNetwork 334"),
 		Description: String("Trying to update the network.."),
 	}
 
 	// now, update the network we just created
-	updatedNetwork, _, err := client.Network.UpdateNetwork(context.Background(), *network.Network, fields)
+	updatedNetwork, _, err := client.Network.UpdateNetwork(context.Background(), "N/n", fields)
 	if err != nil {
 		t.Errorf("Network.UpdateNetwork returned error: %v", err)
 	}

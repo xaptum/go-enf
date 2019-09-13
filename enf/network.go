@@ -59,7 +59,7 @@ func (s *NetworkService) GetNetwork(ctx context.Context, network string) (*Netwo
 		return nil, nil, err
 	}
 
-	return s.getFirstNetwork(ctx, req)
+	return s.doNetworkRequest(ctx, req)
 }
 
 // CreateNetwork creates a network with the given fields under the given domain.
@@ -70,7 +70,7 @@ func (s *NetworkService) CreateNetwork(ctx context.Context, domain string, field
 		return nil, nil, err
 	}
 
-	return s.getFirstNetwork(ctx, req)
+	return s.doNetworkRequest(ctx, req)
 }
 
 // UpdateNetwork updates the name and/or description of an existing network.
@@ -81,11 +81,11 @@ func (s *NetworkService) UpdateNetwork(ctx context.Context, network string, fiel
 		return nil, nil, err
 	}
 
-	return s.getFirstNetwork(ctx, req)
+	return s.doNetworkRequest(ctx, req)
 }
 
-// getFirstNetwork makes an HTTP request and returns the first Network object in the response.
-func (s *NetworkService) getFirstNetwork(ctx context.Context, req *http.Request) (*Network, *http.Response, error) {
+// doNetworkRequest makes an HTTP request and returns the first Network object in the response.
+func (s *NetworkService) doNetworkRequest(ctx context.Context, req *http.Request) (*Network, *http.Response, error) {
 	body := new(networkResponse)
 
 	resp, err := s.client.Do(ctx, req, body)
