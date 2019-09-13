@@ -163,3 +163,68 @@ func TestNetworkService_CreateNetwork(t *testing.T) {
 		t.Errorf("Network.GetNetwork returned %+v, want %+v", network, want)
 	}
 }
+
+func TestNetworkService_UpdateNetwork(t *testing.T) {
+	client, mux, teardown := setup()
+	defer teardown()
+
+	wantAcceptHeaders := []string{mediaTypeJson}
+	wantContentTypeHeaders := []string{mediaTypeJson}
+
+	// expected body for PUT endpoint
+	input := &NetworkRequest{
+		Name:        String("TestNetwork 334"),
+		Description: String("Trying to update the network.."),
+	}
+
+	mux.HandleFunc("/api/xcr/v2/nws/N/n", func(w http.ResponseWriter, r *http.Request) {
+		v := new(NetworkRequest)
+		_ = json.NewDecoder(r.Body).Decode(v)
+
+		testMethod(t, r, "PUT")
+		testHeader(t, r, "Accept", strings.Join(wantAcceptHeaders, ","))
+		testHeader(t, r, "Content-Type", strings.Join(wantContentTypeHeaders, ", "))
+		if !reflect.DeepEqual(v, input) {
+			t.Errorf("Request body = %+v, want %+v", v, input)
+		}
+
+		fmt.Fprintf(w, `{
+			"data": [
+				{
+					"name": "TestNetwork 334",
+					"network": "N/n",
+					"description":  "Trying to update the network..",
+					"status": "ACTIVE"
+				}
+			],
+			"page": {
+				"curr": -1,
+				"next": -1,
+				"prev": -1
+			}
+		}
+	`)
+	})
+
+	fields := &NetworkRequest{
+		Name:        String("TestNetwork 334"),
+		Description: String("Trying to update the network.."),
+	}
+
+	// now, update the network we just created
+	updatedNetwork, _, err := client.Network.UpdateNetwork(context.Background(), "N/n", fields)
+	if err != nil {
+		t.Errorf("Network.UpdateNetwork returned error: %v", err)
+	}
+
+	want := &Network{
+		Name:        String("TestNetwork 334"),
+		Network:     String("N/n"),
+		Description: String("Trying to update the network.."),
+		Status:      String("ACTIVE"),
+	}
+	if !reflect.DeepEqual(updatedNetwork, want) {
+		t.Errorf("Network.UpdateNetwork returned %+v, want %+v", updatedNetwork, want)
+	}
+
+}
