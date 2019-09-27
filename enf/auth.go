@@ -23,9 +23,9 @@ type AuthRequest struct {
 	Password *string `json:"token"`
 }
 
-// AuthResponse represents the authentication credentials returned by
+// Credentials represents the authentication credentials returned by
 // the auth API.
-type AuthResponse struct {
+type Credentials struct {
 	Username      *string `json:"username"`
 	Token         *string `json:"token"`
 	UserID        *int64  `json:"user_id"`
@@ -34,7 +34,13 @@ type AuthResponse struct {
 	DomainNetwork *string `json:"domain_network"`
 }
 
-func (s *AuthService) Authenticate(ctx context.Context, authReq *AuthRequest) (*AuthResponse, *http.Response, error) {
+type authResponse struct {
+	Data []Credentials          `json:"data"`
+	Page map[string]interface{} `json:"page"`
+}
+
+// Authenticate authenticates the given authorization request.
+func (s *AuthService) Authenticate(ctx context.Context, authReq *AuthRequest) (*Credentials, *http.Response, error) {
 	if *authReq.Username == "" {
 		return nil, nil, ErrMissingUsername
 	}
@@ -43,20 +49,11 @@ func (s *AuthService) Authenticate(ctx context.Context, authReq *AuthRequest) (*
 		return nil, nil, ErrMissingPassword
 	}
 
-	path := "/api/xcr/v2/xauth"
-	req, err := s.client.NewRequest("POST", path, authReq)
-	if err != nil {
-		return nil, nil, err
-	}
+	endpoint := "/api/xcr/v2/xauth"
 
-	body := &struct {
-		Data []AuthResponse         `json:"data"`
-		Page map[string]interface{} `json:"page"`
-	}{}
-	resp, err := s.client.Do(ctx, req, body)
+	body, resp, err := s.client.post(ctx, endpoint, new(authResponse), authReq)
 	if err != nil {
 		return nil, resp, err
 	}
-
-	return &body.Data[0], resp, nil
+	return &body.(*authResponse).Data[0], resp, nil
 }

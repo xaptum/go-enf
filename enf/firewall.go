@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	//	"github.com/google/uuid"
 )
 
 var (
@@ -17,6 +16,7 @@ var (
 // firewall rules for each network.
 type FirewallService service
 
+// FirewallRule represents a firewall rule for a network in the ENF.
 type FirewallRule struct {
 	ID      *string `json:"id"`
 	Network *string `json:"network"`
@@ -32,6 +32,7 @@ type FirewallRule struct {
 	DestPort   *int    `json:"dest_port"`
 }
 
+// FirewallRuleRequest represents the body of the request for creating a firewall rule.
 type FirewallRuleRequest struct {
 	Priority   *int    `json:"priority"`
 	Action     *string `json:"action"`
@@ -44,22 +45,17 @@ type FirewallRuleRequest struct {
 	DestPort   *int    `json:"dest_port"`
 }
 
+// ListRules gets all the firewall rules for the given network.
 func (s *FirewallService) ListRules(ctx context.Context, network string) ([]*FirewallRule, *http.Response, error) {
-	path := fmt.Sprintf("api/xfw/v1/%v/rule", network)
-	req, err := s.client.NewRequest("GET", path, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var rules []*FirewallRule
-	resp, err := s.client.Do(ctx, req, &rules)
+	endpoint := fmt.Sprintf("api/xfw/v1/%v/rule", network)
+	body, resp, err := s.client.get(ctx, endpoint, new([]*FirewallRule))
 	if err != nil {
 		return nil, resp, err
 	}
-
-	return rules, resp, nil
+	return *(body.(*[]*FirewallRule)), resp, nil
 }
 
+// GetRule gets the information for the firewall rule with the given id within the given network.
 func (s *FirewallService) GetRule(ctx context.Context, network string, id string) (*FirewallRule, *http.Response, error) {
 	rules, resp, err := s.ListRules(ctx, network)
 	if err != nil {
@@ -76,28 +72,18 @@ func (s *FirewallService) GetRule(ctx context.Context, network string, id string
 	return nil, resp, fmt.Errorf("Rule not found")
 }
 
+// CreateRule creates a firewall rule for the given network.
 func (s *FirewallService) CreateRule(ctx context.Context, network string, rule *FirewallRuleRequest) (*FirewallRule, *http.Response, error) {
-	path := fmt.Sprintf("api/xfw/v1/%v/rule", network)
-	req, err := s.client.NewRequest("POST", path, rule)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	r := new(FirewallRule)
-	resp, err := s.client.Do(ctx, req, r)
+	endpoint := fmt.Sprintf("api/xfw/v1/%v/rule", network)
+	body, resp, err := s.client.post(ctx, endpoint, new(FirewallRule), rule)
 	if err != nil {
 		return nil, resp, err
 	}
-
-	return r, resp, nil
+	return body.(*FirewallRule), resp, nil
 }
 
+// DeleteRule deletes the firewall rule associated with the given network address and ID.
 func (s *FirewallService) DeleteRule(ctx context.Context, network string, id string) (*http.Response, error) {
-	path := fmt.Sprintf("api/xfw/v1/%v/rule/%v", network, id)
-	req, err := s.client.NewRequest("DELETE", path, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return s.client.Do(ctx, req, nil)
+	endpoint := fmt.Sprintf("api/xfw/v1/%v/rule/%v", network, id)
+	return s.client.delete(ctx, endpoint)
 }
