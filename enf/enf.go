@@ -28,6 +28,7 @@ var (
 	defaultUserAgent = fmt.Sprintf("go-enf/%s (+%s; %s)", projectVersion, projectURL, runtime.Version())
 )
 
+// Client represents a wrapper for the HTTP client that communicates with the API.
 type Client struct {
 	// HTTP client used to communicate with the API.
 	client *http.Client
@@ -42,7 +43,7 @@ type Client struct {
 	UserAgent string
 
 	// The API token for authenticating with the API
-	ApiToken string
+	APIToken string
 
 	// Reuse a single struct instead of allocating one for each service on the heap
 	common service
@@ -55,6 +56,53 @@ type Client struct {
 
 type service struct {
 	client *Client
+}
+
+// All the exported methods in this file are designed to be general-purpose HTTP helpers. These methods
+// will accept any request struct, and support any struct type you want the response to be stored in.
+// For usage examples, see the methods in network.go or firewall.go
+
+// get makes a get request to the given endpoint and stores the response in the given body object.
+func (c *Client) get(ctx context.Context, endpoint string, body interface{}) (interface{}, *http.Response, error) {
+	req, err := c.NewRequest("GET", endpoint, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return c.makeRequest(ctx, req, body)
+}
+
+// post makes post requests to the given endpoint with the given fields and stores the response in the given body object.
+func (c *Client) post(ctx context.Context, endpoint string, body interface{}, fields interface{}) (interface{}, *http.Response, error) {
+	req, err := c.NewRequest("POST", endpoint, fields)
+	if err != nil {
+		return nil, nil, err
+	}
+	return c.makeRequest(ctx, req, body)
+}
+
+// put makes put requests to the given endpoint with the given fields and stores the response in the given body object.
+func (c *Client) put(ctx context.Context, endpoint string, body interface{}, fields interface{}) (interface{}, *http.Response, error) {
+	req, err := c.NewRequest("PUT", endpoint, fields)
+	if err != nil {
+		return nil, nil, err
+	}
+	return c.makeRequest(ctx, req, body)
+}
+
+// delete makes delete requests to the given endpoint.
+func (c *Client) delete(ctx context.Context, endpoint string) (*http.Response, error) {
+	req, err := c.NewRequest("DELETE", endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+	return c.Do(ctx, req, nil)
+}
+
+// makeRequest makes the given request, and stores the result into the given body.
+func (c *Client) makeRequest(ctx context.Context, req *http.Request, body interface{}) (interface{}, *http.Response, error) {
+	resp, err := c.Do(ctx, req, body)
+	return body, resp, err
 }
 
 // NewClient returns a new ENF API client for the provided domain. If
@@ -83,6 +131,7 @@ func NewClient(domain string, httpClient *http.Client) (*Client, error) {
 	return c, nil
 }
 
+// NewRequest creates a new HTTP request.
 func (c *Client) NewRequest(method, urlStr string, body interface{}) (*http.Request, error) {
 	u, err := c.BaseURL.Parse(urlStr)
 	if err != nil {
@@ -105,8 +154,8 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}) (*http.Requ
 		return nil, err
 	}
 
-	if c.ApiToken != "" {
-		req.Header.Set(headerToken, fmt.Sprintf(headerTokenFormat, c.ApiToken))
+	if c.APIToken != "" {
+		req.Header.Set(headerToken, fmt.Sprintf(headerTokenFormat, c.APIToken))
 	}
 
 	if body != nil {
@@ -120,6 +169,7 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}) (*http.Requ
 	return req, nil
 }
 
+// Do executes an HTTP request.
 func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*http.Response, error) {
 	req = req.WithContext(ctx)
 
@@ -158,6 +208,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*htt
 	return resp, err
 }
 
+// ErrorResponse represents the error response from the API.
 type ErrorResponse struct {
 	Response *http.Response
 	Errorr   struct {
@@ -172,6 +223,7 @@ func (r *ErrorResponse) Error() string {
 		r.Response.StatusCode, r.Errorr.Code, r.Errorr.Text)
 }
 
+// CheckResponse checks the HTTP response for an error.
 func CheckResponse(r *http.Response) error {
 	if c := r.StatusCode; 200 <= c && c <= 209 {
 		return nil

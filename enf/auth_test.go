@@ -43,7 +43,7 @@ func TestAuthService_Authenticate(t *testing.T) {
 		t.Errorf("Auth.Authenticate returned error: %v", err)
 	}
 
-	want := &AuthResponse{
+	want := &Credentials{
 		Username: String("user"),
 		Token:    String("12345678"),
 		UserID:   Int64(1),
