@@ -14,7 +14,7 @@ import (
 
 const (
 	projectURL     = "github.com/xaptum/go-enf"
-	projectVersion = "0.2.1"
+	projectVersion = "0.2.2"
 
 	defaultScheme = "https"
 
