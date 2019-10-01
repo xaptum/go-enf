@@ -52,6 +52,8 @@ type Client struct {
 	Auth     *AuthService
 	Firewall *FirewallService
 	Network  *NetworkService
+	Domains  *DomainService
+	Endpoint *EndpointService
 }
 
 type service struct {
@@ -62,9 +64,9 @@ type service struct {
 // will accept any request struct, and support any struct type you want the response to be stored in.
 // For usage examples, see the methods in network.go or firewall.go
 
-// get makes a get request to the given endpoint and stores the response in the given body object.
-func (c *Client) get(ctx context.Context, endpoint string, body interface{}) (interface{}, *http.Response, error) {
-	req, err := c.NewRequest("GET", endpoint, nil)
+// get makes a get request to the given path and stores the response in the given body object.
+func (c *Client) get(ctx context.Context, path string, body interface{}) (interface{}, *http.Response, error) {
+	req, err := c.NewRequest("GET", path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -72,27 +74,27 @@ func (c *Client) get(ctx context.Context, endpoint string, body interface{}) (in
 	return c.makeRequest(ctx, req, body)
 }
 
-// post makes post requests to the given endpoint with the given fields and stores the response in the given body object.
-func (c *Client) post(ctx context.Context, endpoint string, body interface{}, fields interface{}) (interface{}, *http.Response, error) {
-	req, err := c.NewRequest("POST", endpoint, fields)
+// post makes post requests to the given path with the given fields and stores the response in the given body object.
+func (c *Client) post(ctx context.Context, path string, body interface{}, fields interface{}) (interface{}, *http.Response, error) {
+	req, err := c.NewRequest("POST", path, fields)
 	if err != nil {
 		return nil, nil, err
 	}
 	return c.makeRequest(ctx, req, body)
 }
 
-// put makes put requests to the given endpoint with the given fields and stores the response in the given body object.
-func (c *Client) put(ctx context.Context, endpoint string, body interface{}, fields interface{}) (interface{}, *http.Response, error) {
-	req, err := c.NewRequest("PUT", endpoint, fields)
+// put makes put requests to the given path with the given fields and stores the response in the given body object.
+func (c *Client) put(ctx context.Context, path string, body interface{}, fields interface{}) (interface{}, *http.Response, error) {
+	req, err := c.NewRequest("PUT", path, fields)
 	if err != nil {
 		return nil, nil, err
 	}
 	return c.makeRequest(ctx, req, body)
 }
 
-// delete makes delete requests to the given endpoint.
-func (c *Client) delete(ctx context.Context, endpoint string) (*http.Response, error) {
-	req, err := c.NewRequest("DELETE", endpoint, nil)
+// delete makes delete requests to the given path.
+func (c *Client) delete(ctx context.Context, path string) (*http.Response, error) {
+	req, err := c.NewRequest("DELETE", path, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -128,6 +130,8 @@ func NewClient(domain string, httpClient *http.Client) (*Client, error) {
 	c.Auth = (*AuthService)(&c.common)
 	c.Firewall = (*FirewallService)(&c.common)
 	c.Network = (*NetworkService)(&c.common)
+	c.Domains = (*DomainService)(&c.common)
+	c.Endpoint = (*EndpointService)(&c.common)
 	return c, nil
 }
 

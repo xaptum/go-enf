@@ -26,7 +26,7 @@ type Network struct {
 }
 
 // networkResponse represents the typical API response for all
-// the endpoints in the xcr namespace
+// the endpoints in the xcr namespace.
 type networkResponse struct {
 	Data []*Network             `json:"data"`
 	Page map[string]interface{} `json:"page"`
