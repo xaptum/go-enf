@@ -3,6 +3,7 @@
 [![Release](https://img.shields.io/github/release/xaptum/go-enf.svg)](https://github.com/xaptum/go-enf/releases)
 [![Build Status](https://travis-ci.com/xaptum/go-enf.svg?branch=master)](https://travis-ci.com/xaptum/go-enf)
 [![Codecov branch](https://img.shields.io/codecov/c/github/xaptum/go-enf/master.svg)](https://codecov.io/gh/xaptum/go-enf)
+[![Go Report Card](https://goreportcard.com/badge/github.com/xaptum/go-enf)](https://goreportcard.com/report/github.com/xaptum/go-enf)
 
 go-enf is a Go client library for accessing the
 [Xaptum](https://www.xaptum.com) ENF API.
