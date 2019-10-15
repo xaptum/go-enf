@@ -11,50 +11,48 @@ import (
 )
 
 func TestNetworkService_GetNetworkRateLimit(t *testing.T) {
-	client, mux, teardown := setup()
-	defer teardown()
+	path := "/api/xcr/v2/nws/N/n/ep_rate_limits/default"
 
-	wantAcceptHeaders := []string{mediaTypeJson}
-	mux.HandleFunc("/api/xcr/v2/nws/N/n/ep_rate_limits/default", func(w http.ResponseWriter, r *http.Request) {
-		testMethod(t, r, "GET")
-		testHeader(t, r, "Accept", strings.Join(wantAcceptHeaders, ", "))
-		fmt.Fprint(w, `{
-			"data": [
-				{
-					"packets_per_second": 100000,
-					"packets_burst_size": 100000,
-					"bytes_per_second": 10000000,
-					"bytes_burst_size": 10000000,
-					"inherit": true 
-				}
-			],
-			"page": {
-				"curr": -1,
-				"next": -1,
-				"prev": -1
+	responseBodyMock := `{
+		"data": [
+			{
+				"packets_per_second": 100000,
+				"packets_burst_size": 100000,
+				"bytes_per_second": 10000000,
+				"bytes_burst_size": 10000000,
+				"inherit": true 
 			}
+		],
+		"page": {
+			"curr": -1,
+			"next": -1,
+			"prev": -1
 		}
-			`)
-	})
+	}
+		`
 
-	defaultRateLimit, _, err := client.Network.GetDefaultEndpointRateLimits(context.Background(), "N/n")
-	if err != nil {
-		t.Errorf("Network.GetDefaultRateLimits returned error: %v", err)
+	expected := &NetworkRateLimits{
+		PacketsPerSecond: Int(100000),
+		PacketsBurstSize: Int(100000),
+		BytesPerSecond:   Int(10000000),
+		BytesBurstSize:   Int(10000000),
+		Inherit:          Bool(true),
 	}
 
-	want :=
-		&NetworkRateLimits{
-			PacketsPerSecond: Int(100000),
-			PacketsBurstSize: Int(100000),
-			BytesPerSecond:   Int(10000000),
-			BytesBurstSize:   Int(10000000),
-			Inherit:          Bool(true),
-		}
-
-	if !reflect.DeepEqual(defaultRateLimit, want) {
-		t.Errorf("Network.GetDefaultRateLimits returned %+v, want %+v", defaultRateLimit, want)
+	method := func(client *Client) (interface{}, *http.Response, error) {
+		return client.Network.GetDefaultEndpointRateLimits(context.Background(), "N/n")
 	}
 
+	testParams := &TestParams{
+		Path:             path,
+		RequestBody:      struct{}{},
+		ResponseBodyMock: responseBodyMock,
+		Expected:         expected,
+		Method:           method,
+		T:                t,
+	}
+
+	getTest(testParams)
 }
 
 func TestNetworkService_SetNetworkRateLimit(t *testing.T) {
@@ -70,8 +68,6 @@ func TestNetworkService_SetNetworkRateLimit(t *testing.T) {
 		Inherit:          Bool(false),
 	}
 
-	wantAcceptHeaders := []string{mediaTypeJson}
-	wantContentTypeHeaders := []string{mediaTypeJson}
 	mux.HandleFunc("/api/xcr/v2/nws/N/n/ep_rate_limits/default", func(w http.ResponseWriter, r *http.Request) {
 		v := new(DomainRateLimits)
 		_ = json.NewDecoder(r.Body).Decode(v)
