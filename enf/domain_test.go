@@ -154,9 +154,11 @@ func TestDomainService_ActivateDomain(t *testing.T) {
 	defer teardown()
 
 	wantAcceptHeaders := []string{mediaTypeJson}
+	wantContentTypeHeaders := []string{mediaTypeJson}
 	mux.HandleFunc("/api/xcr/v2/domains/N/n0/status", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "PUT")
 		testHeader(t, r, "Accept", strings.Join(wantAcceptHeaders, ", "))
+		testHeader(t, r, "Content-Type", strings.Join(wantContentTypeHeaders, ", "))
 		fmt.Fprint(w, `{
 			"data": [
 				{
@@ -194,9 +196,11 @@ func TestDomainService_DeactivateDomain(t *testing.T) {
 	defer teardown()
 
 	wantAcceptHeaders := []string{mediaTypeJson}
+	wantContentTypeHeaders := []string{mediaTypeJson}
 	mux.HandleFunc("/api/xcr/v2/domains/N/n0/status", func(w http.ResponseWriter, r *http.Request) {
-		testMethod(t, r, "DELETE")
+		testMethod(t, r, "PUT")
 		testHeader(t, r, "Accept", strings.Join(wantAcceptHeaders, ", "))
+		testHeader(t, r, "Content-Type", strings.Join(wantContentTypeHeaders, ", "))
 		fmt.Fprint(w, `{
 			"data": [
 				{
@@ -214,8 +218,17 @@ func TestDomainService_DeactivateDomain(t *testing.T) {
 				`)
 	})
 
-	_, err := client.Domains.DeactivateDomain(context.Background(), "N/n0")
+	deactivatedDomain, _, err := client.Domains.DeactivateDomain(context.Background(), "N/n0")
 	if err != nil {
 		t.Errorf("Domains.DeactivateDomain returned error: %v", err)
+	}
+
+	want := &Domain{
+		Name:    String("test.domain.1"),
+		Network: String("N/n0"),
+		Status:  String("READY"),
+	}
+	if !reflect.DeepEqual(deactivatedDomain, want) {
+		t.Errorf("Domains.DeactivateDomain returned %+v, want %+v", deactivatedDomain, want)
 	}
 }

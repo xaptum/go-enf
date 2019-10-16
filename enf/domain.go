@@ -62,7 +62,7 @@ func (s *DomainService) CreateDomain(ctx context.Context, req *DomainRequest) (*
 // ActivateDomain activates the given domain (sets the status field to ACTIVE)
 func (s *DomainService) ActivateDomain(ctx context.Context, domain string) (*Domain, *http.Response, error) {
 	path := fmt.Sprintf("api/xcr/v2/domains/%v/status", domain)
-	body, resp, err := s.client.put(ctx, path, new(domainResponse), struct{}{})
+	body, resp, err := s.client.put(ctx, path, new(domainResponse), "ACTIVE")
 	if err != nil {
 		return nil, resp, err
 	}
@@ -71,7 +71,11 @@ func (s *DomainService) ActivateDomain(ctx context.Context, domain string) (*Dom
 }
 
 // DeactivateDomain deactivates the given domain (sets the status field to READY)
-func (s *DomainService) DeactivateDomain(ctx context.Context, domain string) (*http.Response, error) {
+func (s *DomainService) DeactivateDomain(ctx context.Context, domain string) (*Domain, *http.Response, error) {
 	path := fmt.Sprintf("api/xcr/v2/domains/%v/status", domain)
-	return s.client.delete(ctx, path)
+	body, resp, err := s.client.put(ctx, path, new(domainResponse), "READY")
+	if err != nil {
+		return nil, resp, err
+	}
+	return body.(*domainResponse).Data[0], resp, nil
 }
