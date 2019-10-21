@@ -21,11 +21,13 @@ const (
 	headerToken       = "Authorization"
 	headerTokenFormat = "Bearer %s"
 
-	mediaTypeJson = "application/json"
+	mediaTypeJSON = "application/json"
 )
 
 var (
-	defaultUserAgent = fmt.Sprintf("go-enf/%s (+%s; %s)", projectVersion, projectURL, runtime.Version())
+	defaultUserAgent       = fmt.Sprintf("go-enf/%s (+%s; %s)", projectVersion, projectURL, runtime.Version())
+	wantAcceptHeaders      = []string{mediaTypeJSON}
+	wantContentTypeHeaders = []string{mediaTypeJSON}
 )
 
 // Client represents a wrapper for the HTTP client that communicates with the API.

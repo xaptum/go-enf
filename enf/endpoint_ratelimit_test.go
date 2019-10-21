@@ -11,71 +11,81 @@ import (
 )
 
 func TestNetworkService_GetEndpointRateLimit(t *testing.T) {
-	client, mux, teardown := setup()
-	defer teardown()
+	currentPath := "/api/xcr/v2/cxns/N/n/1234:5678/ep_rate_limits/current"
 
-	wantAcceptHeaders := []string{mediaTypeJson}
-	mux.HandleFunc("/api/xcr/v2/cxns/N/n/1234:5678/ep_rate_limits/current", func(w http.ResponseWriter, r *http.Request) {
-		testMethod(t, r, "GET")
-		testHeader(t, r, "Accept", strings.Join(wantAcceptHeaders, ", "))
-		fmt.Fprint(w, `{
-			"data": [
-				{
-					"packets_per_second": 100000,
-					"packets_burst_size": 100000,
-					"bytes_per_second": 10000000,
-					"bytes_burst_size": 10000000,
-					"inherit": true 
-				}
-			],
-			"page": {
-				"curr": -1,
-				"next": -1,
-				"prev": -1
+	currentResponseBodyMock := `{
+		"data": [
+			{
+				"packets_per_second": 100000,
+				"packets_burst_size": 100000,
+				"bytes_per_second": 10000000,
+				"bytes_burst_size": 10000000,
+				"inherit": true 
 			}
+		],
+		"page": {
+			"curr": -1,
+			"next": -1,
+			"prev": -1
 		}
-			`)
-	})
-
-	mux.HandleFunc("/api/xcr/v2/cxns/N/n/1234:5678/ep_rate_limits/max", func(w http.ResponseWriter, r *http.Request) {
-		testMethod(t, r, "GET")
-		testHeader(t, r, "Accept", strings.Join(wantAcceptHeaders, ", "))
-		fmt.Fprint(w, `{
-			"data": [
-				{
-					"packets_per_second": 100000,
-					"packets_burst_size": 100000,
-					"bytes_per_second": 10000000,
-					"bytes_burst_size": 10000000,
-					"inherit": true
-				}
-			],
-			"page": {
-				"curr": -1,
-				"next": -1,
-				"prev": -1
-			}
-		}
-			`)
-	})
-
-	currentRateLimit, _, err := client.Endpoint.GetCurrentRateLimits(context.Background(), "N/n/1234:5678")
-	if err != nil {
-		t.Errorf("Endpoint.GetCurrentRateLimits returned error: %v", err)
+	}
+		`
+	expected := &EndpointRateLimits{
+		PacketsPerSecond: Int(100000),
+		PacketsBurstSize: Int(100000),
+		BytesPerSecond:   Int(10000000),
+		BytesBurstSize:   Int(10000000),
+		Inherit:          Bool(true),
+	}
+	currentMethod := func(client *Client) (interface{}, *http.Response, error) {
+		return client.Endpoint.GetCurrentRateLimits(context.Background(), "N/n/1234:5678")
 	}
 
-	want :=
-		&EndpointRateLimits{
-			PacketsPerSecond: Int(100000),
-			PacketsBurstSize: Int(100000),
-			BytesPerSecond:   Int(10000000),
-			BytesBurstSize:   Int(10000000),
-			Inherit:          Bool(true),
-		}
-
-	if !reflect.DeepEqual(currentRateLimit, want) {
-		t.Errorf("Endpoint.GetCurrentRateLimits returned %+v, want %+v", currentRateLimit, want)
+	currentTestParams := &TestParams{
+		Path:             currentPath,
+		RequestBody:      struct{}{},
+		ResponseBodyMock: currentResponseBodyMock,
+		Expected:         expected,
+		Method:           currentMethod,
+		T:                t,
 	}
+
+	getTest(currentTestParams)
+
+	maxPath := "/api/xcr/v2/cxns/N/n/1234:5678/ep_rate_limits/max"
+
+	maxResponseBodyMock := `{
+		"data": [
+			{
+				"packets_per_second": 100000,
+				"packets_burst_size": 100000,
+				"bytes_per_second": 10000000,
+				"bytes_burst_size": 10000000,
+				"inherit": true
+			}
+		],
+		"page": {
+			"curr": -1,
+			"next": -1,
+			"prev": -1
+		}
+	}
+		`
+
+	maxMethod := func(client *Client) (interface{}, *http.Response, error) {
+		return client.Endpoint.GetMaxRateLimits(context.Background(), "N/n/1234:5678")
+	}
+
+	maxTestParams := &TestParams{
+		Path:             maxPath,
+		RequestBody:      struct{}{},
+		ResponseBodyMock: maxResponseBodyMock,
+		Expected:         expected,
+		Method:           maxMethod,
+		T:                t,
+	}
+
+	getTest(maxTestParams)
 }
 
 func TestNetworkService_SetEndpointRateLimit(t *testing.T) {
@@ -91,8 +101,6 @@ func TestNetworkService_SetEndpointRateLimit(t *testing.T) {
 		Inherit:          Bool(false),
 	}
 
-	wantAcceptHeaders := []string{mediaTypeJson}
-	wantContentTypeHeaders := []string{mediaTypeJson}
 	mux.HandleFunc("/api/xcr/v2/cxns/N/n/1234:5678/ep_rate_limits/current", func(w http.ResponseWriter, r *http.Request) {
 		v := new(DomainRateLimits)
 		_ = json.NewDecoder(r.Body).Decode(v)

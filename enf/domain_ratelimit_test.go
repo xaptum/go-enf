@@ -11,60 +11,25 @@ import (
 )
 
 func TestNetworkService_GetDomainRateLimit(t *testing.T) {
-	client, mux, teardown := setup()
-	defer teardown()
+	defaultPath := "/api/xcr/v2/domains/N/ep_rate_limits/default"
 
-	wantAcceptHeaders := []string{mediaTypeJson}
-	mux.HandleFunc("/api/xcr/v2/domains/N/ep_rate_limits/default", func(w http.ResponseWriter, r *http.Request) {
-		testMethod(t, r, "GET")
-		testHeader(t, r, "Accept", strings.Join(wantAcceptHeaders, ", "))
-		fmt.Fprint(w, `{
-			"data": [
-				{
-					"packets_per_second": 1000,
-					"packets_burst_size": 1000,
-					"bytes_per_second": 10000,
-					"bytes_burst_size": 10000
-				}
-			],
-			"page": {
-				"curr": -1,
-				"next": -1,
-				"prev": -1
+	defaultResponseBodyMock := `{
+		"data": [
+			{
+				"packets_per_second": 1000,
+				"packets_burst_size": 1000,
+				"bytes_per_second": 10000,
+				"bytes_burst_size": 10000
 			}
-		}`)
-	})
-	mux.HandleFunc("/api/xcr/v2/domains/N/ep_rate_limits/max", func(w http.ResponseWriter, r *http.Request) {
-		testMethod(t, r, "GET")
-		testHeader(t, r, "Accept", strings.Join(wantAcceptHeaders, ", "))
-		fmt.Fprint(w, `{
-			"data": [
-				{
-					"packets_per_second": 1000,
-					"packets_burst_size": 1000,
-					"bytes_per_second": 10000,
-					"bytes_burst_size": 10000
-				}
-			],
-			"page": {
-				"curr": -1,
-				"next": -1,
-				"prev": -1
-			}
-		}`)
-	})
+		],
+		"page": {
+			"curr": -1,
+			"next": -1,
+			"prev": -1
+		}
+	}`
 
-	defaultRateLimits, _, err := client.Domains.GetDefaultEndpointRateLimits(context.Background(), "N")
-	if err != nil {
-		t.Errorf("Domains.GetDefaultRateLimits returned error: %v", err)
-	}
-
-	maxRateLimits, _, err := client.Domains.GetMaxDefaultEndpointRateLimits(context.Background(), "N")
-	if err != nil {
-		t.Errorf("Domains.GetMaxRateLimits returned error: %v", err)
-	}
-
-	want :=
+	defaultExpected :=
 		&DomainRateLimits{
 			PacketsPerSecond: Int(1000),
 			PacketsBurstSize: Int(1000),
@@ -72,13 +37,61 @@ func TestNetworkService_GetDomainRateLimit(t *testing.T) {
 			BytesBurstSize:   Int(10000),
 		}
 
-	if !reflect.DeepEqual(defaultRateLimits, want) {
-		t.Errorf("Domains.GetDefaultRateLimits returned %+v, want %+v", defaultRateLimits, want)
+	defaultMethod := func(client *Client) (interface{}, *http.Response, error) {
+		return client.Domains.GetDefaultEndpointRateLimits(context.Background(), "N")
 	}
 
-	if !reflect.DeepEqual(maxRateLimits, want) {
-		t.Errorf("Domains.GetMaxRateLimits returned %+v, want %+v", maxRateLimits, want)
+	defaultTestingParameters := &TestParams{
+		Path:             defaultPath,
+		RequestBody:      struct{}{},
+		ResponseBodyMock: defaultResponseBodyMock,
+		Expected:         defaultExpected,
+		Method:           defaultMethod,
+		T:                t,
 	}
+
+	getTest(defaultTestingParameters)
+
+	maxPath := "/api/xcr/v2/domains/N/ep_rate_limits/max"
+
+	maxResponseBodyMock := `{
+		"data": [
+			{
+				"packets_per_second": 1000,
+				"packets_burst_size": 1000,
+				"bytes_per_second": 10000,
+				"bytes_burst_size": 10000
+			}
+		],
+		"page": {
+			"curr": -1,
+			"next": -1,
+			"prev": -1
+		}
+	}`
+
+	maxExpected :=
+		&DomainRateLimits{
+			PacketsPerSecond: Int(1000),
+			PacketsBurstSize: Int(1000),
+			BytesPerSecond:   Int(10000),
+			BytesBurstSize:   Int(10000),
+		}
+
+	maxMethod := func(client *Client) (interface{}, *http.Response, error) {
+		return client.Domains.GetMaxDefaultEndpointRateLimits(context.Background(), "N")
+	}
+
+	maxTestParams := &TestParams{
+		Path:             maxPath,
+		RequestBody:      struct{}{},
+		ResponseBodyMock: maxResponseBodyMock,
+		Expected:         maxExpected,
+		Method:           maxMethod,
+		T:                t,
+	}
+
+	getTest(maxTestParams)
 }
 
 func TestNetworkService_SetDomainRateLimit(t *testing.T) {
@@ -93,8 +106,6 @@ func TestNetworkService_SetDomainRateLimit(t *testing.T) {
 		BytesBurstSize:   Int(10000),
 	}
 
-	wantAcceptHeaders := []string{mediaTypeJson}
-	wantContentTypeHeaders := []string{mediaTypeJson}
 	mux.HandleFunc("/api/xcr/v2/domains/N/ep_rate_limits/default", func(w http.ResponseWriter, r *http.Request) {
 		v := new(DomainRateLimits)
 		_ = json.NewDecoder(r.Body).Decode(v)
