@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"runtime"
+	"time"
 )
 
 const (
@@ -135,7 +136,7 @@ func NewClient(domain string, httpClient *http.Client) (*Client, error) {
 	c.Network = (*NetworkService)(&c.common)
 	c.Domains = (*DomainService)(&c.common)
 	c.Endpoint = (*EndpointService)(&c.common)
-	//c.DNS = (*DNSService)(&c.common)
+	c.DNS = (*DNSService)(&c.common)
 	return c, nil
 }
 
@@ -261,3 +262,7 @@ func Int64(v int64) *int64 { return &v }
 // String is a helper function that creates a new value and returns a
 // pointer to it.
 func String(v string) *string { return &v }
+
+// Time is a helper function that creates a new value and returns a
+// pointer to it.
+func Time(v time.Time) *time.Time { return &v }
