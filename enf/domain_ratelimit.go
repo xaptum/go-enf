@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 )
 
 // DomainService handles communication with the domain-related methods
@@ -28,7 +29,7 @@ type domainRateLimitResponse struct {
 // GetDefaultEndpointRateLimits gets the default rate limits for an endpoint in the given domain.
 func (s *DomainService) GetDefaultEndpointRateLimits(ctx context.Context, domain string) (*DomainRateLimits, *http.Response, error) {
 	path := fmt.Sprintf("api/xcr/v2/domains/%v/ep_rate_limits/default", domain)
-	body, resp, err := s.client.get(ctx, path, new(domainRateLimitResponse))
+	body, resp, err := s.client.get(ctx, path, url.Values{}, new(domainRateLimitResponse))
 	if err != nil {
 		return nil, resp, err
 	}
@@ -38,7 +39,7 @@ func (s *DomainService) GetDefaultEndpointRateLimits(ctx context.Context, domain
 // GetMaxDefaultEndpointRateLimits gets the max rate limits for an endpoint in the given domain.
 func (s *DomainService) GetMaxDefaultEndpointRateLimits(ctx context.Context, domain string) (*DomainRateLimits, *http.Response, error) {
 	path := fmt.Sprintf("api/xcr/v2/domains/%v/ep_rate_limits/max", domain)
-	body, resp, err := s.client.get(ctx, path, new(domainRateLimitResponse))
+	body, resp, err := s.client.get(ctx, path, url.Values{}, new(domainRateLimitResponse))
 	if err != nil {
 		return nil, resp, err
 	}

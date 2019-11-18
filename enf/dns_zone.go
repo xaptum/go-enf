@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -42,7 +43,7 @@ type zoneResponse struct {
 // ListZones lists all the DNS zones for a given ENF domain (::/48 address).
 func (s *DNSService) ListZones(ctx context.Context) ([]*Zone, *http.Response, error) {
 	path := "api/xdns/2019-05-27/zones"
-	body, resp, err := s.client.get(ctx, path, new(zoneResponse))
+	body, resp, err := s.client.get(ctx, path, url.Values{}, new(zoneResponse))
 	if err != nil {
 		return nil, resp, err
 	}
@@ -53,7 +54,7 @@ func (s *DNSService) ListZones(ctx context.Context) ([]*Zone, *http.Response, er
 // GetZone gets a DNS zone given its UUID.
 func (s *DNSService) GetZone(ctx context.Context, zoneUUID string) (*Zone, *http.Response, error) {
 	path := fmt.Sprintf("api/xdns/2019-05-27/zones/%v", zoneUUID)
-	body, resp, err := s.client.get(ctx, path, new(zoneResponse))
+	body, resp, err := s.client.get(ctx, path, url.Values{}, new(zoneResponse))
 	if err != nil {
 		return nil, resp, err
 	}

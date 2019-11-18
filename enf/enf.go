@@ -53,11 +53,12 @@ type Client struct {
 
 	// Services used for talking to different parts of the ENF API.
 	Auth     *AuthService
-	Firewall *FirewallService
-	Network  *NetworkService
 	DNS      *DNSService
 	Domains  *DomainService
 	Endpoint *EndpointService
+	Firewall *FirewallService
+	Network  *NetworkService
+	User     *UserService
 }
 
 type service struct {
@@ -69,11 +70,14 @@ type service struct {
 // For usage examples, see the methods in network.go or firewall.go
 
 // get makes a get request to the given path and stores the response in the given body object.
-func (c *Client) get(ctx context.Context, path string, body interface{}) (interface{}, *http.Response, error) {
+func (c *Client) get(ctx context.Context, path string, queryParameters url.Values, body interface{}) (interface{}, *http.Response, error) {
 	req, err := c.NewRequest("GET", path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
+
+	// Add the query parameters to the request URL.
+	req.URL.RawQuery = queryParameters.Encode()
 
 	return c.makeRequest(ctx, req, body)
 }
@@ -132,11 +136,12 @@ func NewClient(domain string, httpClient *http.Client) (*Client, error) {
 	c := &Client{client: httpClient, Domain: domain, BaseURL: baseURL, UserAgent: defaultUserAgent}
 	c.common.client = c
 	c.Auth = (*AuthService)(&c.common)
-	c.Firewall = (*FirewallService)(&c.common)
-	c.Network = (*NetworkService)(&c.common)
 	c.Domains = (*DomainService)(&c.common)
 	c.Endpoint = (*EndpointService)(&c.common)
 	c.DNS = (*DNSService)(&c.common)
+	c.Firewall = (*FirewallService)(&c.common)
+	c.Network = (*NetworkService)(&c.common)
+	c.User = (*UserService)(&c.common)
 	return c, nil
 }
 

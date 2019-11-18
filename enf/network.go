@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 )
 
 // NetworkService handles communication with the network related
@@ -35,7 +36,7 @@ type networkResponse struct {
 // ListNetworks gets a list of all the networks under a given domain.
 func (s *NetworkService) ListNetworks(ctx context.Context, domain string) ([]*Network, *http.Response, error) {
 	path := fmt.Sprintf("api/xcr/v2/domains/%v/nws", domain)
-	body, resp, err := s.client.get(ctx, path, new(networkResponse))
+	body, resp, err := s.client.get(ctx, path, url.Values{}, new(networkResponse))
 	if err != nil {
 		return nil, resp, err
 	}
@@ -45,7 +46,7 @@ func (s *NetworkService) ListNetworks(ctx context.Context, domain string) ([]*Ne
 // GetNetwork gets the network object for a given network address of the form <prefix>/<prefix_length>.
 func (s *NetworkService) GetNetwork(ctx context.Context, network string) (*Network, *http.Response, error) {
 	path := fmt.Sprintf("api/xcr/v2/nws/%s", network)
-	body, resp, err := s.client.get(ctx, path, new(networkResponse))
+	body, resp, err := s.client.get(ctx, path, url.Values{}, new(networkResponse))
 	if err != nil {
 		return nil, resp, err
 	}
