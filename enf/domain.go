@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 )
 
 // Domain represents a domain in the ENF.
@@ -29,7 +30,7 @@ type domainResponse struct {
 // ListDomains lists all available domains on the ENF.
 func (s *DomainService) ListDomains(ctx context.Context) ([]*Domain, *http.Response, error) {
 	path := fmt.Sprintf("api/xcr/v2/domains")
-	body, resp, err := s.client.get(ctx, path, new(domainResponse))
+	body, resp, err := s.client.get(ctx, path, url.Values{}, new(domainResponse))
 	if err != nil {
 		return nil, resp, err
 	}
@@ -40,7 +41,7 @@ func (s *DomainService) ListDomains(ctx context.Context) ([]*Domain, *http.Respo
 // GetDomain gets the information of a specified domain.
 func (s *DomainService) GetDomain(ctx context.Context, domain string) (*Domain, *http.Response, error) {
 	path := fmt.Sprintf("api/xcr/v2/domains/%v", domain)
-	body, resp, err := s.client.get(ctx, path, new(domainResponse))
+	body, resp, err := s.client.get(ctx, path, url.Values{}, new(domainResponse))
 	if err != nil {
 		return nil, resp, err
 	}

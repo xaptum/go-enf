@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 )
 
 // NetworkRateLimits represents the values of rate limits for a network.
@@ -25,7 +26,7 @@ type networkRateLimitResponse struct {
 // GetDefaultEndpointRateLimits gets the default rate limits for endpoints in the given network.
 func (s *NetworkService) GetDefaultEndpointRateLimits(ctx context.Context, network string) (*NetworkRateLimits, *http.Response, error) {
 	path := fmt.Sprintf("api/xcr/v2/nws/%v/ep_rate_limits/default", network)
-	body, resp, err := s.client.get(ctx, path, new(networkRateLimitResponse))
+	body, resp, err := s.client.get(ctx, path, url.Values{}, new(networkRateLimitResponse))
 	if err != nil {
 		return nil, resp, err
 	}
@@ -35,7 +36,7 @@ func (s *NetworkService) GetDefaultEndpointRateLimits(ctx context.Context, netwo
 // GetMaxDefaultEndpointRateLimits gets the max default rate limits for endpoints in the given network.
 func (s *NetworkService) GetMaxDefaultEndpointRateLimits(ctx context.Context, network string) (*NetworkRateLimits, *http.Response, error) {
 	path := fmt.Sprintf("api/xcr/v2/nws/%v/ep_rate_limits/max", network)
-	body, resp, err := s.client.get(ctx, path, new(networkRateLimitResponse))
+	body, resp, err := s.client.get(ctx, path, url.Values{}, new(networkRateLimitResponse))
 	if err != nil {
 		return nil, resp, err
 	}

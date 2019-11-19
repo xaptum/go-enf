@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 )
 
 // EndpointService handles communication with all endpoint related methods within
@@ -29,7 +30,7 @@ type endpointRateLimitResponse struct {
 // GetCurrentRateLimits gets the current rate limits for the given endpoint IPv6 address.
 func (s *EndpointService) GetCurrentRateLimits(ctx context.Context, endpointIPv6 string) (*EndpointRateLimits, *http.Response, error) {
 	path := fmt.Sprintf("api/xcr/v2/cxns/%v/ep_rate_limits/current", endpointIPv6)
-	body, resp, err := s.client.get(ctx, path, new(endpointRateLimitResponse))
+	body, resp, err := s.client.get(ctx, path, url.Values{}, new(endpointRateLimitResponse))
 	if err != nil {
 		return nil, resp, err
 	}
@@ -39,7 +40,7 @@ func (s *EndpointService) GetCurrentRateLimits(ctx context.Context, endpointIPv6
 // GetMaxRateLimits gets the max rate limits for the given endpoint IPv6 address.
 func (s *EndpointService) GetMaxRateLimits(ctx context.Context, endpointIPv6 string) (*EndpointRateLimits, *http.Response, error) {
 	path := fmt.Sprintf("api/xcr/v2/cxns/%v/ep_rate_limits/max", endpointIPv6)
-	body, resp, err := s.client.get(ctx, path, new(endpointRateLimitResponse))
+	body, resp, err := s.client.get(ctx, path, url.Values{}, new(endpointRateLimitResponse))
 	if err != nil {
 		return nil, resp, err
 	}

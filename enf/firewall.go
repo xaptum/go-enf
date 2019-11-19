@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 )
 
 var (
@@ -48,7 +49,7 @@ type FirewallRuleRequest struct {
 // ListRules gets all the firewall rules for the given network.
 func (s *FirewallService) ListRules(ctx context.Context, network string) ([]*FirewallRule, *http.Response, error) {
 	path := fmt.Sprintf("api/xfw/v1/%v/rule", network)
-	body, resp, err := s.client.get(ctx, path, new([]*FirewallRule))
+	body, resp, err := s.client.get(ctx, path, url.Values{}, new([]*FirewallRule))
 	if err != nil {
 		return nil, resp, err
 	}
