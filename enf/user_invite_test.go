@@ -6,8 +6,8 @@ import (
 	"testing"
 )
 
-func TestUserService_ListInvitesForDomainAddress(t *testing.T) {
-	path := "/api/xcr/v2/domains/1/invites"
+func TestUserService_ListInvites(t *testing.T) {
+	path := "/api/xcr/v3/invites"
 
 	responseBodyMock := `{
 		"data": [
@@ -30,7 +30,7 @@ func TestUserService_ListInvitesForDomainAddress(t *testing.T) {
 	}
 
 	method := func(client *Client) (interface{}, *http.Response, error) {
-		return client.User.ListInvitesForDomainAddress(context.Background(), "1")
+		return client.User.ListInvites(context.Background())
 	}
 
 	testParams := &TestParams{
@@ -45,13 +45,18 @@ func TestUserService_ListInvitesForDomainAddress(t *testing.T) {
 	getTest(testParams)
 }
 
-func TestUserService_SendNewInvite(t *testing.T) {
-	path := "/api/xcr/v2/domains/1/invites"
+func TestUserService_SendInvite(t *testing.T) {
+	path := "/api/xcr/v3/invites"
 
 	requestBody := &SendInviteRequest{
 		Email:    String("user@acme.com"),
 		FullName: String("Xaptum User"),
-		UserType: String("DOMAIN_USER"),
+		Roles: []*UserRole{
+			{
+				CIDR: String("D/d0"),
+				Role: String("DOMAIN_USER"),
+			},
+		},
 	}
 
 	responseBodyMock := `{
@@ -60,7 +65,10 @@ func TestUserService_SendNewInvite(t *testing.T) {
 				"id": 1,
 				"email": "user@acme.com",
 				"name": "Xaptum User",
-				"type": "DOMAIN_USER"
+				"role": {
+					"cidr" : "D/d0",
+					"role" : "DOMAIN_USER"
+				}
 			}
 		]
 	}`
@@ -69,11 +77,14 @@ func TestUserService_SendNewInvite(t *testing.T) {
 		ID:    Int(1),
 		Email: String("user@acme.com"),
 		Name:  String("Xaptum User"),
-		Type:  String("DOMAIN_USER"),
+		Role: &UserRole{
+			CIDR: String("D/d0"),
+			Role: String("DOMAIN_USER"),
+		},
 	}
 
 	method := func(client *Client) (interface{}, *http.Response, error) {
-		return client.User.SendNewInvite(context.Background(), "1", requestBody)
+		return client.User.SendInvite(context.Background(), requestBody)
 	}
 
 	testParams := &TestParams{
@@ -89,7 +100,7 @@ func TestUserService_SendNewInvite(t *testing.T) {
 }
 
 func TestUserService_AcceptInvite(t *testing.T) {
-	path := "/api/xcr/v2/users/invites"
+	path := "/api/xcr/v3/invites"
 
 	requestBody := &AcceptInviteRequest{
 		Email:    String("user@acme.com"),
@@ -117,12 +128,12 @@ func TestUserService_AcceptInvite(t *testing.T) {
 }
 
 func TestUserService_ResendInvite(t *testing.T) {
-	path := "/api/xcr/v2/invites/user@acme.com"
+	path := "/api/xcr/v3/invites/1"
 
 	responseBodyMock := `[]`
 
 	method := func(client *Client) (interface{}, *http.Response, error) {
-		resp, err := client.User.ResendInvite(context.Background(), "user@acme.com")
+		resp, err := client.User.ResendInvite(context.Background(), 1)
 		return struct{}{}, resp, err
 	}
 
@@ -139,12 +150,12 @@ func TestUserService_ResendInvite(t *testing.T) {
 }
 
 func TestUserService_DeleteInvite(t *testing.T) {
-	path := "/api/xcr/v2/invites/user@acme.com"
+	path := "/api/xcr/v3/invites/1"
 
 	responseBodyMock := `[]`
 
 	method := func(client *Client) (interface{}, *http.Response, error) {
-		resp, err := client.User.DeleteInvite(context.Background(), "user@acme.com")
+		resp, err := client.User.DeleteInvite(context.Background(), 1)
 		return struct{}{}, resp, err
 	}
 
