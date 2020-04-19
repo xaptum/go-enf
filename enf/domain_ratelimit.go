@@ -7,10 +7,6 @@ import (
 	"net/url"
 )
 
-// DomainService handles communication with the domain-related methods
-// of the ENF API.
-type DomainService service
-
 // DomainRateLimits represents the values of rate limits for a domain.
 type DomainRateLimits struct {
 	PacketsPerSecond *int `json:"packets_per_second"`
