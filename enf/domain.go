@@ -7,6 +7,10 @@ import (
 	"net/url"
 )
 
+// DomainService handles communication with the domain-related methods
+// of the ENF API.
+type DomainService service
+
 // Domain represents a domain in the ENF.
 type Domain struct {
 	Name    *string `json:"name"`
