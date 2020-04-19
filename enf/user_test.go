@@ -6,8 +6,8 @@ import (
 	"testing"
 )
 
-func TestUserService_ListUsersForDomainAddress(t *testing.T) {
-	path := "/api/xcr/v2/domains/N/users"
+func TestUserService_ListUsers(t *testing.T) {
+	path := "/api/xcr/v3/users"
 
 	responseBodyMock := `{
 		"data": [
@@ -15,6 +15,12 @@ func TestUserService_ListUsersForDomainAddress(t *testing.T) {
 				"user_id": 1,
 				"username": "user@acme",
 				"full_name": "Xaptum User",
+				"roles": [
+					{
+						"role" : "DOMAIN_USER",
+						"cidr" : "D/d0"
+					}
+				],
 				"status": "ACTIVE"
 			}
 		]
@@ -25,12 +31,18 @@ func TestUserService_ListUsersForDomainAddress(t *testing.T) {
 			UserID:   Int(1),
 			Username: String("user@acme"),
 			FullName: String("Xaptum User"),
-			Status:   String("ACTIVE"),
+			Roles: []*UserRole{
+				{
+					Role: String("DOMAIN_USER"),
+					CIDR: String("D/d0"),
+				},
+			},
+			Status: String("ACTIVE"),
 		},
 	}
 
 	method := func(client *Client) (interface{}, *http.Response, error) {
-		return client.User.ListUsersForDomainAddress(context.Background(), "N")
+		return client.User.ListUsers(context.Background())
 	}
 
 	testParams := &TestParams{
@@ -45,8 +57,8 @@ func TestUserService_ListUsersForDomainAddress(t *testing.T) {
 	getTest(testParams)
 }
 
-func TestUserService_ListUsersForDomainID(t *testing.T) {
-	path := "/api/xcr/v2/domains/1/users"
+func TestUserService_ListUsersForDomain(t *testing.T) {
+	path := "/api/xcr/v3/users"
 
 	responseBodyMock := `{
 		"data": [
@@ -54,6 +66,12 @@ func TestUserService_ListUsersForDomainID(t *testing.T) {
 				"user_id": 1,
 				"username": "user@acme",
 				"full_name": "Xaptum User",
+				"roles": [
+					{
+						"role" : "DOMAIN_USER",
+						"cidr" : "D/d0"
+					}
+				],
 				"status": "ACTIVE"
 			}
 		]
@@ -64,12 +82,126 @@ func TestUserService_ListUsersForDomainID(t *testing.T) {
 			UserID:   Int(1),
 			Username: String("user@acme"),
 			FullName: String("Xaptum User"),
-			Status:   String("ACTIVE"),
+			Roles: []*UserRole{
+				{
+					Role: String("DOMAIN_USER"),
+					CIDR: String("D/d0"),
+				},
+			},
+			Status: String("ACTIVE"),
 		},
 	}
 
 	method := func(client *Client) (interface{}, *http.Response, error) {
-		return client.User.ListUsersForDomainID(context.Background(), "1")
+		return client.User.ListUsersForDomain(context.Background(), "D/d0")
+	}
+
+	testParams := &TestParams{
+		Path:             path,
+		RequestBody:      struct{}{},
+		ResponseBodyMock: responseBodyMock,
+		Expected:         expected,
+		Method:           method,
+		T:                t,
+	}
+
+	getTest(testParams)
+}
+
+func TestUserService_ListUsersForNetwork(t *testing.T) {
+	path := "/api/xcr/v3/users"
+
+	responseBodyMock := `{
+		"data": [
+			{
+				"user_id": 1,
+				"username": "user@acme",
+				"full_name": "Xaptum User",
+				"roles": [
+					{
+						"role" : "NETWORK_ADMIN",
+						"cidr" : "N/n0"
+					}
+				],
+				"status": "ACTIVE"
+			}
+		]
+	}`
+
+	expected := []*User{
+		{
+			UserID:   Int(1),
+			Username: String("user@acme"),
+			FullName: String("Xaptum User"),
+			Roles: []*UserRole{
+				{
+					Role: String("NETWORK_ADMIN"),
+					CIDR: String("N/n0"),
+				},
+			},
+			Status: String("ACTIVE"),
+		},
+	}
+
+	method := func(client *Client) (interface{}, *http.Response, error) {
+		return client.User.ListUsersForNetwork(context.Background(), "N/n0")
+	}
+
+	testParams := &TestParams{
+		Path:             path,
+		RequestBody:      struct{}{},
+		ResponseBodyMock: responseBodyMock,
+		Expected:         expected,
+		Method:           method,
+		T:                t,
+	}
+
+	getTest(testParams)
+}
+
+func TestUserService_GetUser(t *testing.T) {
+	path := "/api/xcr/v3/users/1"
+
+	responseBodyMock := `{
+		"data": [
+			{
+				"user_id": 1,
+				"username": "user@acme",
+				"full_name": "Xaptum User",
+				"roles": [
+					{
+						"role" : "DOMAIN_USER",
+						"cidr" : "D/d0"
+					},
+					{
+						"role" : "NETWORK_ADMIN",
+						"cidr" : "N/n0"
+					}
+				],
+				"status": "ACTIVE"
+			}
+		]
+	}`
+
+	expected := &User{
+		UserID:   Int(1),
+		Username: String("user@acme"),
+		FullName: String("Xaptum User"),
+		Roles: []*UserRole{
+			{
+				Role: String("DOMAIN_USER"),
+				CIDR: String("D/d0"),
+			},
+			{
+				Role: String("NETWORK_ADMIN"),
+				CIDR: String("N/n0"),
+			},
+		},
+		Status: String("ACTIVE"),
+	}
+
+	method := func(client *Client) (interface{}, *http.Response, error) {
+		return client.User.GetUser(context.Background(), 1)
 	}
 
 	testParams := &TestParams{
@@ -85,7 +217,7 @@ func TestUserService_ListUsersForDomainID(t *testing.T) {
 }
 
 func TestUserService_UpdateUserStatus(t *testing.T) {
-	path := "/api/xcr/v2/users/61/status"
+	path := "/api/xcr/v3/users/61/status"
 
 	requestBody := &UpdateUserStatusRequest{
 		Status: String("INACTIVE"),
@@ -111,7 +243,7 @@ func TestUserService_UpdateUserStatus(t *testing.T) {
 }
 
 func TestUserService_EmailResetPasswordCode(t *testing.T) {
-	path := "/api/xcr/v2/users/reset"
+	path := "/api/xcr/v3/users/reset"
 
 	responseBodyMock := `[]`
 
@@ -133,7 +265,7 @@ func TestUserService_EmailResetPasswordCode(t *testing.T) {
 }
 
 func TestUserService_ResetPassword(t *testing.T) {
-	path := "/api/xcr/v2/users/reset"
+	path := "/api/xcr/v3/users/reset"
 
 	requestBody := &ResetPasswordRequest{
 		Email:    String("user@acme.com"),
