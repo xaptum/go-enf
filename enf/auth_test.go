@@ -7,7 +7,7 @@ import (
 )
 
 func TestAuthService_Authenticate(t *testing.T) {
-	path := "/api/xcr/v2/xauth"
+	path := "/api/xcr/v3/xauth"
 
 	requestBody := &AuthRequest{
 		Username: String("user"),
@@ -19,18 +19,29 @@ func TestAuthService_Authenticate(t *testing.T) {
 			{
 				"username":"user",
 				"token":"12345678",
-				"user_id":1
+				"user_id":1,
+				"roles": [
+					{
+						"cidr" : "N/n0",
+						"role" : "NETWORK_USER"
+					}
+				]
 			}
 		],
 		"page": {
-
-			}
+		}
 		}`
 
 	expected := &Credentials{
 		Username: String("user"),
 		Token:    String("12345678"),
 		UserID:   Int64(1),
+		Roles: []*UserRole{
+			{
+				CIDR: String("N/n0"),
+				Role: String("NETWORK_USER"),
+			},
+		},
 	}
 
 	method := func(client *Client) (interface{}, *http.Response, error) {
