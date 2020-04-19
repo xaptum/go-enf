@@ -86,5 +86,5 @@ func (s *FirewallService) CreateRule(ctx context.Context, network string, rule *
 // DeleteRule deletes the firewall rule associated with the given network address and ID.
 func (s *FirewallService) DeleteRule(ctx context.Context, network string, id string) (*http.Response, error) {
 	path := fmt.Sprintf("api/xfw/v1/%v/rule/%v", network, id)
-	return s.client.delete(ctx, path)
+	return s.client.delete(ctx, path, url.Values{})
 }

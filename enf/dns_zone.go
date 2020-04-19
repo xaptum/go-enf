@@ -87,7 +87,7 @@ func (s *DNSService) UpdateZone(ctx context.Context, zoneUUID string, req *Updat
 // DeleteZone deletes a zone given its UUID.
 func (s *DNSService) DeleteZone(ctx context.Context, zoneUUID string) (*http.Response, error) {
 	path := fmt.Sprintf("api/xdns/2019-05-27/zones/%v", zoneUUID)
-	resp, err := s.client.delete(ctx, path)
+	resp, err := s.client.delete(ctx, path, url.Values{})
 	if err != nil {
 		return resp, err
 	}
