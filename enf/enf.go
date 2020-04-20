@@ -101,11 +101,15 @@ func (c *Client) put(ctx context.Context, path string, body interface{}, fields 
 }
 
 // delete makes delete requests to the given path.
-func (c *Client) delete(ctx context.Context, path string) (*http.Response, error) {
+func (c *Client) delete(ctx context.Context, path string, queryParameters url.Values) (*http.Response, error) {
 	req, err := c.NewRequest("DELETE", path, nil)
 	if err != nil {
 		return nil, err
 	}
+
+	// Add the query parameters to the request URL.
+	req.URL.RawQuery = queryParameters.Encode()
+
 	return c.Do(ctx, req, nil)
 }
 

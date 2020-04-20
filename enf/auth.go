@@ -26,12 +26,12 @@ type AuthRequest struct {
 // Credentials represents the authentication credentials returned by
 // the auth API.
 type Credentials struct {
-	Username      *string `json:"username"`
-	Token         *string `json:"token"`
-	UserID        *int64  `json:"user_id"`
-	UserType      *string `json:"type"`
-	DomainID      *int64  `json:"domain_id"`
-	DomainNetwork *string `json:"domain_network"`
+	Username *string     `json:"username"`
+	Token    *string     `json:"token"`
+	UserID   *int64      `json:"user_id"`
+	Roles    []*UserRole `json:"roles"`
+	DomainID *int64      `json:"domain_id"`
+	Domain   *string     `json:"domain"`
 }
 
 type authResponse struct {
@@ -49,7 +49,7 @@ func (s *AuthService) Authenticate(ctx context.Context, authReq *AuthRequest) (*
 		return nil, nil, ErrMissingPassword
 	}
 
-	endpoint := "/api/xcr/v2/xauth"
+	endpoint := "/api/xcr/v3/xauth"
 
 	body, resp, err := s.client.post(ctx, endpoint, new(authResponse), authReq)
 	if err != nil {
