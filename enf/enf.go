@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
 	"runtime"
@@ -14,246 +14,121 @@ import (
 )
 
 const (
-	projectURL     = "github.com/xaptum/go-enf"
-	projectVersion = "0.3.0"
+	ProjectURL     = "github.com/xaptum/go-enf"
+	ProjectVersion = "0.4.0"
 
-	defaultScheme = "https"
+	HttpsScheme = "https"
 
-	headerToken       = "Authorization"
-	headerTokenFormat = "Bearer %s"
+	HeaderToken       = "Authorization"
+	HeaderTokenFormat = "Bearer %s"
 
-	mediaTypeJSON = "application/json"
+	MediaTypeJSON = "application/json"
 )
 
 var (
-	defaultUserAgent       = fmt.Sprintf("go-enf/%s (+%s; %s)", projectVersion, projectURL, runtime.Version())
-	wantAcceptHeaders      = []string{mediaTypeJSON}
-	wantContentTypeHeaders = []string{mediaTypeJSON}
+	defaultUserAgent = fmt.Sprintf("go-enf/%s (+%s; %s)", ProjectVersion, ProjectURL, runtime.Version())
 )
+
+type HttpMethod string
+
+const (
+	Get    HttpMethod = "GET"
+	Put    HttpMethod = "PUT"
+	Post   HttpMethod = "POST"
+	Delete HttpMethod = "DELETE"
+)
+
+type QueryParams map[string]string
+type RequestHeaders map[string]string
+
+type Request struct {
+	url         string
+	headers     RequestHeaders
+	queryParams QueryParams
+	body        interface{}
+}
+
+type Response struct {
+	StatusCode int
+	Method     HttpMethod
+	Url        string
+	Headers    map[string][]string
+}
+
+type ErrorCodeText struct {
+	Code string `json:"code"`
+	Text string `json:"text"`
+}
+
+type ErrorReason struct {
+	Reason string `json:"reason"`
+}
+
+// ErrorResponse represents the error response from the API.
+type ErrorResponse struct {
+	Response         *Response      `json:"-"`
+	ErrorMessage     *ErrorCodeText `json:"error"`
+	XiamErrorMessage *ErrorReason   `json:"xiam_error"`
+}
+
+func (e *ErrorResponse) Error() string {
+	var msg string
+
+	if nil == e.ErrorMessage {
+		msg = fmt.Sprintf("%v %v: [%d] %v - %v",
+			e.Response.Method, e.Response.Url,
+			e.Response.StatusCode, e.ErrorMessage.Code, e.ErrorMessage.Text)
+	} else if nil == e.XiamErrorMessage {
+		msg = fmt.Sprintf("%v %v: [%d] %v",
+			e.Response.Method, e.Response.Url,
+			e.Response.StatusCode, e.XiamErrorMessage.Reason)
+	} else {
+		msg = "UNKNOWN_ERROR: server did not respond with properly formatted error message."
+	}
+
+	return msg
+}
+
+type TokenSource interface {
+	Token() string
+}
+
+type StaticTokenSource struct {
+	token string
+}
+
+func (ts *StaticTokenSource) Token() string {
+	return ts.token
+}
 
 // Client represents a wrapper for the HTTP client that communicates with the API.
 type Client struct {
 	// HTTP client used to communicate with the API.
-	client *http.Client
-
-	// The ENF customer domain
-	Domain string
+	httpClient *http.Client
 
 	// The base URL for API requests parsed from the Domain
-	BaseURL *url.URL
-
-	// User agent used when communicating with the ENF API.
-	UserAgent string
+	baseUrl *url.URL
 
 	// The API token for authenticating with the API
-	APIToken string
+	authToken string
+
+	// User agent used when communicating with the ENF API.
+	userAgent string
 
 	// Reuse a single struct instead of allocating one for each service on the heap
-	common service
+	service Service
 
 	// Services used for talking to different parts of the ENF API.
-	Auth     *AuthService
 	DNS      *DNSService
-	Domains  *DomainService
+	Domain   *DomainService
 	Endpoint *EndpointService
 	Firewall *FirewallService
 	Network  *NetworkService
 	User     *UserService
 }
 
-type service struct {
+type Service struct {
 	client *Client
-}
-
-// All the exported methods in this file are designed to be general-purpose HTTP helpers. These methods
-// will accept any request struct, and support any struct type you want the response to be stored in.
-// For usage examples, see the methods in network.go or firewall.go
-
-// get makes a get request to the given path and stores the response in the given body object.
-func (c *Client) get(ctx context.Context, path string, queryParameters url.Values, body interface{}) (interface{}, *http.Response, error) {
-	req, err := c.NewRequest("GET", path, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// Add the query parameters to the request URL.
-	req.URL.RawQuery = queryParameters.Encode()
-
-	return c.makeRequest(ctx, req, body)
-}
-
-// post makes post requests to the given path with the given fields and stores the response in the given body object.
-func (c *Client) post(ctx context.Context, path string, body interface{}, fields interface{}) (interface{}, *http.Response, error) {
-	req, err := c.NewRequest("POST", path, fields)
-	if err != nil {
-		return nil, nil, err
-	}
-	return c.makeRequest(ctx, req, body)
-}
-
-// put makes put requests to the given path with the given fields and stores the response in the given body object.
-func (c *Client) put(ctx context.Context, path string, body interface{}, fields interface{}) (interface{}, *http.Response, error) {
-	req, err := c.NewRequest("PUT", path, fields)
-	if err != nil {
-		return nil, nil, err
-	}
-	return c.makeRequest(ctx, req, body)
-}
-
-// delete makes delete requests to the given path.
-func (c *Client) delete(ctx context.Context, path string, queryParameters url.Values) (*http.Response, error) {
-	req, err := c.NewRequest("DELETE", path, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	// Add the query parameters to the request URL.
-	req.URL.RawQuery = queryParameters.Encode()
-
-	return c.Do(ctx, req, nil)
-}
-
-// makeRequest makes the given request, and stores the result into the given body.
-func (c *Client) makeRequest(ctx context.Context, req *http.Request, body interface{}) (interface{}, *http.Response, error) {
-	resp, err := c.Do(ctx, req, body)
-	return body, resp, err
-}
-
-// NewClient returns a new ENF API client for the provided domain. If
-// a nil httpClient is provided, a new http.Client will be used.  To
-// use API methods which require authentication, provide an
-// http.Client that will perform the authentication for you (such as
-// that provided by TokenAuthClient in this library)
-func NewClient(domain string, httpClient *http.Client) (*Client, error) {
-	if httpClient == nil {
-		httpClient = &http.Client{}
-	}
-
-	baseURL, err := url.Parse(domain)
-	if err != nil {
-		return nil, err
-	}
-	if baseURL.Scheme == "" {
-		baseURL.Scheme = defaultScheme
-	}
-
-	c := &Client{client: httpClient, Domain: domain, BaseURL: baseURL, UserAgent: defaultUserAgent}
-	c.common.client = c
-	c.Auth = (*AuthService)(&c.common)
-	c.Domains = (*DomainService)(&c.common)
-	c.Endpoint = (*EndpointService)(&c.common)
-	c.DNS = (*DNSService)(&c.common)
-	c.Firewall = (*FirewallService)(&c.common)
-	c.Network = (*NetworkService)(&c.common)
-	c.User = (*UserService)(&c.common)
-	return c, nil
-}
-
-// NewRequest creates a new HTTP request.
-func (c *Client) NewRequest(method, urlStr string, body interface{}) (*http.Request, error) {
-	u, err := c.BaseURL.Parse(urlStr)
-	if err != nil {
-		return nil, err
-	}
-
-	var buf io.ReadWriter
-	if body != nil {
-		buf = new(bytes.Buffer)
-		enc := json.NewEncoder(buf)
-		enc.SetEscapeHTML(false)
-		err := enc.Encode(body)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	req, err := http.NewRequest(method, u.String(), buf)
-	if err != nil {
-		return nil, err
-	}
-
-	if c.APIToken != "" {
-		req.Header.Set(headerToken, fmt.Sprintf(headerTokenFormat, c.APIToken))
-	}
-
-	if body != nil {
-		req.Header.Set("Content-Type", "application/json")
-	}
-	req.Header.Set("Accept", "application/json")
-	if c.UserAgent != "" {
-		req.Header.Set("User-Agent", c.UserAgent)
-	}
-
-	return req, nil
-}
-
-// Do executes an HTTP request.
-func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*http.Response, error) {
-	req = req.WithContext(ctx)
-
-	resp, err := c.client.Do(req)
-	if err != nil {
-		// If we got an error, and the context has been canceled,.
-		// the context's error is probably more useful.
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-			return nil, err
-		}
-	}
-	defer resp.Body.Close()
-
-	err = CheckResponse(resp)
-	if err != nil {
-		return resp, err
-	}
-
-	if v != nil {
-		if w, ok := v.(io.Writer); ok {
-			_, _ = io.Copy(w, resp.Body)
-		} else {
-			decErr := json.NewDecoder(resp.Body).Decode(v)
-			if decErr == io.EOF {
-				decErr = nil // ignore EOF errors caused by empty response body
-			}
-			if decErr != nil {
-				err = decErr
-			}
-		}
-	}
-
-	return resp, err
-}
-
-// ErrorResponse represents the error response from the API.
-type ErrorResponse struct {
-	Response *http.Response
-	Errorr   struct {
-		Code string `json:"code"`
-		Text string `json:"text"`
-	} `json:"error"`
-}
-
-func (r *ErrorResponse) Error() string {
-	return fmt.Sprintf("%v %v: [%d] %v - %v",
-		r.Response.Request.Method, r.Response.Request.URL,
-		r.Response.StatusCode, r.Errorr.Code, r.Errorr.Text)
-}
-
-// CheckResponse checks the HTTP response for an error.
-func CheckResponse(r *http.Response) error {
-	if c := r.StatusCode; 200 <= c && c <= 209 {
-		return nil
-	}
-
-	errorResponse := &ErrorResponse{Response: r}
-	data, err := ioutil.ReadAll(r.Body)
-	if err == nil && data != nil {
-		_ = json.Unmarshal(data, errorResponse)
-	}
-
-	return errorResponse
 }
 
 // Bool is a helper function that creates a new value and returns a
@@ -275,3 +150,277 @@ func String(v string) *string { return &v }
 // Time is a helper function that creates a new value and returns a
 // pointer to it.
 func Time(v time.Time) *time.Time { return &v }
+
+// NewClient returns a new ENF API client for the provided domain. If
+// a nil httpClient is provided, a new http.Client will be used.  To
+// use API methods which require authentication, provide an
+// http.Client that will perform the authentication for you (such as
+// that provided by TokenAuthClient in this library)
+func NewClient(host string, ts TokenSource, httpClient *http.Client) (*Client, error) {
+	// parse host
+	baseUrl, err := url.Parse(host)
+	if nil != err {
+		return nil, err
+	}
+	if "" == baseUrl.Scheme {
+		baseUrl.Scheme = HttpsScheme
+	}
+
+	// create http client
+	if nil == httpClient {
+		httpClient = &http.Client{
+			Timeout: time.Second * 20,
+			Transport: &http.Transport{
+				Dial: (&net.Dialer{
+					Timeout: 5 * time.Second,
+				}).Dial,
+			},
+		}
+	}
+
+	// get api token
+	var token string
+	if nil != ts {
+		token = ts.Token()
+	}
+
+	// create enf api client
+	c := &Client{
+		httpClient: httpClient,
+		baseUrl:    baseUrl,
+		authToken:  token,
+		userAgent:  defaultUserAgent,
+	}
+	c.service.client = c
+	c.Domains = (*DomainService)(&c.service)
+	c.Endpoint = (*EndpointService)(&c.service)
+	c.DNS = (*DNSService)(&c.service)
+	c.Firewall = (*FirewallService)(&c.service)
+	c.Network = (*NetworkService)(&c.service)
+	c.User = (*UserService)(&c.service)
+	return c, nil
+}
+
+func NewRequest(url string, headers RequestHeaders, queryParams QueryParams, body interface{}) Request {
+	return Request{
+		url:         url,
+		headers:     headers,
+		queryParams: queryParams,
+		body:        body,
+	}
+}
+
+func (c *Client) get(ctx context.Context, request Request, v interface{}) (*Response, error) {
+	// send request
+	return c.do(ctx, Get, request, v)
+}
+
+func (c *Client) post(ctx context.Context, request Request, v interface{}) (*Response, error) {
+	// send request
+	return c.do(ctx, Post, request, v)
+}
+
+func (c *Client) put(ctx context.Context, request Request, v interface{}) (*Response, error) {
+	// send request
+	return c.do(ctx, Put, request, v)
+}
+
+func (c *Client) delete(ctx context.Context, request Request, v interface{}) (*Response, error) {
+	// send request
+	return c.do(ctx, Delete, request, v)
+}
+
+// Do executes an HTTP request.
+func (c *Client) do(ctx context.Context, method HttpMethod, request Request, v interface{}) (*Response, error) {
+	// make http.Request
+	req, err := c.newHttpRequest(method, request)
+	if nil != err {
+		return nil, err
+	}
+
+	// create request with context
+	req = req.WithContext(ctx)
+
+	// send request
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		// If we got an error, and the context has been canceled,.
+		// the context's error is probably more useful.
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			return nil, err
+		}
+	}
+	defer resp.Body.Close()
+
+	return c.processHttpResponse(resp, v)
+}
+
+func (c *Client) newHttpRequest(method HttpMethod, request Request) (*http.Request, error) {
+	// add query parameters
+	request.url = c.addQueryParams(request.url, request.queryParams)
+
+	// encode request body into json
+	body, err := c.json(request.body)
+	if nil != err {
+		return nil, err
+	}
+
+	// create http requeuest
+	httpRequest, err := http.NewRequest(string(method), request.url, bytes.NewBuffer(body))
+	if nil != err {
+		return nil, err
+	}
+
+	// add headers
+	for key, value := range request.headers {
+		httpRequest.Header.Set(key, value)
+	}
+
+	// add missing content type header
+	_, exists := httpRequest.Header["Content-Type"]
+	if len(body) > 0 && !exists {
+		httpRequest.Header.Set("Content-Type", "application/json")
+	}
+
+	// add missing accept header
+	_, exists = httpRequest.Header["Accept"]
+	if !exists {
+		httpRequest.Header.Set("Accept", "application/json")
+	}
+
+	// add authorization header
+	if "" != c.authToken {
+		httpRequest.Header.Set(HeaderToken, fmt.Sprintf(HeaderTokenFormat, c.authToken))
+	}
+
+	// add user-agent header
+	httpRequest.Header.Set("User-Agent", c.userAgent)
+
+	return httpRequest, nil
+}
+
+// process http response
+func (c *Client) processHttpResponse(httpResp *http.Response, v interface{}) (*Response, error) {
+	// create response object
+	response := &Response{
+		StatusCode: httpResp.StatusCode,
+		Headers:    httpResp.Header,
+		Method:     HttpMethod(httpResp.Request.Method),
+		Url:        httpResp.Request.URL.String(),
+	}
+
+	// create an error response object
+	var errResp = &ErrorResponse{
+		Response: response,
+	}
+
+	switch httpResp.StatusCode {
+	case 200, 201:
+		// parse response body for api response json
+		if err := c.parseJson(httpResp.Body, v); nil != err {
+			return nil, err
+		}
+		return response, nil
+
+	case 400, 401:
+		// parse response body for error json
+		if err := c.parseJson(httpResp.Body, errResp); nil != err {
+			// not a json error message
+			return nil, err
+		}
+		// return error response
+		return nil, errResp
+
+	case 403:
+		// method not found error
+		errResp.ErrorMessage.Code = "http_error"
+		errResp.ErrorMessage.Text = "Method Not Found"
+		return nil, errResp
+
+	case 415:
+		// method not found error
+		errResp.ErrorMessage.Code = "http_error"
+		errResp.ErrorMessage.Text = "Unsupported Media Type"
+		return nil, errResp
+
+	case 404:
+		// parse response body for error json
+		if err := c.parseJson(httpResp.Body, errResp); nil != err {
+			// not a json error message. assume URL not found
+			errResp.ErrorMessage.Code = "http_error"
+			errResp.ErrorMessage.Text = "Not Found"
+		}
+		// return error response
+		return nil, errResp
+
+	case 500:
+		// parse response body for error json
+		if err := c.parseJson(httpResp.Body, errResp); nil != err {
+			// not a json error message. encode a genric error message
+			errResp.ErrorMessage.Code = "server_error"
+			errResp.ErrorMessage.Text = "Server error received without details"
+		}
+		// return error response
+		return nil, errResp
+
+	default:
+		return nil, fmt.Errorf("unexpected status code %d", httpResp.StatusCode)
+
+	}
+}
+
+func (c *Client) addQueryParams(baseUrl string, queryParams QueryParams) string {
+	if 0 == len(queryParams) {
+		return baseUrl
+	}
+
+	baseUrl += "?"
+	params := url.Values{}
+	for key, value := range queryParams {
+		params.Add(key, value)
+	}
+	return baseUrl + params.Encode()
+}
+
+func (c *Client) json(body interface{}) ([]byte, error) {
+	// create buffer
+	buf := new(bytes.Buffer)
+
+	// encode to json if needed
+	if nil != body {
+		if err := json.NewEncoder(buf).Encode(body); err != nil {
+			return nil, err
+		}
+	}
+
+	// return json
+	return buf.Bytes(), nil
+}
+
+func (c *Client) parseJson(buf io.Reader, v interface{}) error {
+	// check if v is not nil
+	if nil == v {
+		// no need to parse. just return
+		return nil
+	}
+
+	var err error
+
+	if w, ok := v.(io.Writer); ok {
+		_, err = io.Copy(w, buf)
+	} else {
+		err = json.NewDecoder(buf).Decode(v)
+		if io.EOF == err {
+			err = nil // ignore ERO errors caused by empty response body
+		}
+	}
+
+	return err
+}
+
+// All the exported methods in this file are designed to be general-purpose HTTP helpers. These methods
+// will accept any request struct, and support any struct type you want the response to be stored in.
+// For usage examples, see the methods in network.go or firewall.go

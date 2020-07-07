@@ -9,7 +9,7 @@ import (
 
 // EndpointService handles communication with all endpoint related methods within
 // the ENF API.
-type EndpointService service
+type EndpointService Service
 
 // EndpointRateLimits represents the values of rate limits for an endpoint.
 type EndpointRateLimits struct {

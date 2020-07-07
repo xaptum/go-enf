@@ -3,15 +3,13 @@ package enf
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"net/url"
 	"time"
 )
 
 // DNSService handles communication with the DNS related
 // methods of the ENF API. These methods are used to manage the DNS zones,
 // DNS records, and service endpoints on the ENF.
-type DNSService service
+type DNSService Service
 
 // Zone represents a DNS zone within the ENF.
 type Zone struct {
@@ -35,62 +33,89 @@ type UpdateZoneRequest struct {
 	Description *string `json:"description"`
 }
 
-type zoneResponse struct {
+type ZoneResponse struct {
 	Data []*Zone                `json:"data"`
 	Page map[string]interface{} `json:"page"`
 }
 
 // ListZones lists all the DNS zones for a given ENF domain (::/48 address).
-func (s *DNSService) ListZones(ctx context.Context) ([]*Zone, *http.Response, error) {
-	path := "api/xdns/2019-05-27/zones"
-	body, resp, err := s.client.get(ctx, path, url.Values{}, new(zoneResponse))
+func (s *DNSService) ListZones(ctx context.Context) ([]*Zone, error) {
+	// create request
+	req := NewRequest("/api/xdns/2019-05-27/zones", nil, nil, nil)
+
+	// call the api
+	zoneResponse := new(ZoneResponse)
+	_, err := s.client.get(ctx, req, zoneResponse)
 	if err != nil {
-		return nil, resp, err
+		return nil, err
 	}
 
-	return body.(*zoneResponse).Data, resp, nil
+	// return data
+	return zoneResponse.Data, nil
 }
 
 // GetZone gets a DNS zone given its UUID.
-func (s *DNSService) GetZone(ctx context.Context, zoneUUID string) (*Zone, *http.Response, error) {
-	path := fmt.Sprintf("api/xdns/2019-05-27/zones/%v", zoneUUID)
-	body, resp, err := s.client.get(ctx, path, url.Values{}, new(zoneResponse))
+func (s *DNSService) GetZone(ctx context.Context, zoneUUID string) (*Zone, error) {
+	// create request
+	path := fmt.Sprintf("/api/xdns/2019-05-27/zones/%v", zoneUUID)
+	req := NewRequest(path, nil, nil, nil)
+
+	// call api
+	zoneResponse := new(ZoneResponse)
+	_, err := s.client.get(ctx, req, zoneResponse)
 	if err != nil {
-		return nil, resp, err
+		return nil, err
 	}
 
-	return body.(*zoneResponse).Data[0], resp, nil
+	// return data
+	return zoneResponse.Data[0], nil
 }
 
 // CreateZone creates a new DNS zone.
-func (s *DNSService) CreateZone(ctx context.Context, req *CreateZoneRequest) (*Zone, *http.Response, error) {
-	path := "api/xdns/2019-05-27/zones"
-	body, resp, err := s.client.post(ctx, path, new(zoneResponse), req)
+func (s *DNSService) CreateZone(ctx context.Context, createZoneReq *CreateZoneRequest) (*Zone, error) {
+	// create request
+	req := NewRequest("/api/xdns/2019-05-27/zones", nil, nil, createZoneReq)
+
+	// call api
+	zoneResponse := new(ZoneResponse)
+	_, err := s.client.post(ctx, req, zoneResponse)
 	if err != nil {
-		return nil, resp, err
+		return nil, err
 	}
 
-	return body.(*zoneResponse).Data[0], resp, nil
+	// return data
+	return zoneResponse.Data[0], nil
 }
 
 // UpdateZone updates a zone's description given its UUID.
-func (s *DNSService) UpdateZone(ctx context.Context, zoneUUID string, req *UpdateZoneRequest) (*Zone, *http.Response, error) {
-	path := fmt.Sprintf("api/xdns/2019-05-27/zones/%v", zoneUUID)
-	body, resp, err := s.client.put(ctx, path, new(zoneResponse), req)
+func (s *DNSService) UpdateZone(ctx context.Context, zoneUUID string, updateZoneReq *UpdateZoneRequest) (*Zone, error) {
+	// create request
+	path := fmt.Sprintf("/api/xdns/2019-05-27/zones/%v", zoneUUID)
+	req := NewRequest(path, nil, nil, updateZoneReq)
+
+	// call api
+	zoneResponse := new(ZoneResponse)
+	_, err := s.client.put(ctx, req, zoneResponse)
 	if err != nil {
-		return nil, resp, err
+		return nil, err
 	}
 
-	return body.(*zoneResponse).Data[0], resp, nil
+	// return data
+	return zoneResponse.Data[0], nil
 }
 
 // DeleteZone deletes a zone given its UUID.
-func (s *DNSService) DeleteZone(ctx context.Context, zoneUUID string) (*http.Response, error) {
-	path := fmt.Sprintf("api/xdns/2019-05-27/zones/%v", zoneUUID)
-	resp, err := s.client.delete(ctx, path, url.Values{})
+func (s *DNSService) DeleteZone(ctx context.Context, zoneUUID string) error {
+	// create request
+	path := fmt.Sprintf("/api/xdns/2019-05-27/zones/%v", zoneUUID)
+	req := NewRequest(path, nil, nil, nil)
+
+	// call api
+	_, err := s.client.delete(ctx, req, nil)
 	if err != nil {
-		return resp, err
+		return err
 	}
 
-	return resp, nil
+	// return success
+	return nil
 }

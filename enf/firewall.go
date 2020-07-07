@@ -15,7 +15,7 @@ var (
 // FirewallService handles communication with the firewall related
 // methods of the ENF API. These methods are used to manage the
 // firewall rules for each network.
-type FirewallService service
+type FirewallService Service
 
 // FirewallRule represents a firewall rule for a network in the ENF.
 type FirewallRule struct {

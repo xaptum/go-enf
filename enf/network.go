@@ -10,7 +10,7 @@ import (
 // NetworkService handles communication with the network related
 // methods of the ENF API. These methods are used to manage the networks
 // under each domain.
-type NetworkService service
+type NetworkService Service
 
 // NetworkRequest is used to create a new network or update the information of an existing one.
 type NetworkRequest struct {

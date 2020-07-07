@@ -47,7 +47,7 @@ type inviteResponse struct {
 
 // ListInvites gets a list of active invites.
 func (s *UserService) ListInvites(ctx context.Context) ([]*Invite, *http.Response, error) {
-	path := fmt.Sprintf("api/xcr/v3/invites")
+	path := "api/xcr/v3/invites"
 	body, resp, err := s.client.get(ctx, path, url.Values{}, new(inviteResponse))
 	if err != nil {
 		return nil, resp, err
@@ -58,7 +58,7 @@ func (s *UserService) ListInvites(ctx context.Context) ([]*Invite, *http.Respons
 
 // SendInvite sends an invite for a new user.
 func (s *UserService) SendInvite(ctx context.Context, inviteRequest *SendInviteRequest) (*Invite, *http.Response, error) {
-	path := fmt.Sprintf("api/xcr/v3/invites")
+	path := "api/xcr/v3/invites"
 	body, resp, err := s.client.post(ctx, path, new(inviteResponse), inviteRequest)
 	if err != nil {
 		return nil, resp, err

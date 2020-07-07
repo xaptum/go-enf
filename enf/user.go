@@ -11,7 +11,7 @@ import (
 // UserService handles communication with the user related methods of the
 // ENF API. These methods include sending, resending, accepting, deleting, and
 // listing new user invites, viewing the users for a domain, and resetting user passwords.
-type UserService service
+type UserService Service
 
 // User represents an ENF user.
 type User struct {
@@ -49,7 +49,7 @@ type emptyResponse []interface{}
 
 // ListUsers gets the list of all users.
 func (s *UserService) ListUsers(ctx context.Context) ([]*User, *http.Response, error) {
-	path := fmt.Sprintf("api/xcr/v3/users")
+	path := "api/xcr/v3/users"
 
 	body, resp, err := s.client.get(ctx, path, url.Values{}, new(userResponse))
 	if err != nil {
@@ -61,7 +61,7 @@ func (s *UserService) ListUsers(ctx context.Context) ([]*User, *http.Response, e
 
 // ListUsersForDomain gets the list of users with roles in a given domain.
 func (s *UserService) ListUsersForDomain(ctx context.Context, domain string) ([]*User, *http.Response, error) {
-	path := fmt.Sprintf("api/xcr/v3/users")
+	path := "api/xcr/v3/users"
 
 	queryParameters := url.Values{}
 	queryParameters.Add("domain", domain)
@@ -76,7 +76,7 @@ func (s *UserService) ListUsersForDomain(ctx context.Context, domain string) ([]
 
 // ListUsersForNetwork gets the list of users with roles in a given network.
 func (s *UserService) ListUsersForNetwork(ctx context.Context, network string) ([]*User, *http.Response, error) {
-	path := fmt.Sprintf("api/xcr/v3/users")
+	path := "api/xcr/v3/users"
 
 	queryParameters := url.Values{}
 	queryParameters.Add("network", network)

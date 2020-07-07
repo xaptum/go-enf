@@ -3,24 +3,19 @@ package enf
 import (
 	"context"
 	"errors"
-	"net/http"
 )
 
 var (
-	ErrMissingUsername = errors.New("Missing required field 'Username'")
-	ErrMissingPassword = errors.New("Missing required field 'Password'")
+	ErrMissingHost     = errors.New("Missing required parameter 'host'")
+	ErrMissingUsername = errors.New("Missing required parameter 'username'")
+	ErrMissingPassword = errors.New("Missing required paramter 'password'")
 )
-
-// AuthService handles communication with authentication related
-// methods of the ENF API. These methods are used to obtain
-// authentication tokens.
-type AuthService service
 
 // AuthRequest represents a request to authenticate with the
 // API.
 type AuthRequest struct {
 	Username *string `json:"username"`
-	Password *string `json:"token"`
+	Password *string `json:"password"`
 }
 
 // Credentials represents the authentication credentials returned by
@@ -34,26 +29,40 @@ type Credentials struct {
 	Domain   *string     `json:"domain"`
 }
 
-type authResponse struct {
+type AuthResponse struct {
 	Data []Credentials          `json:"data"`
 	Page map[string]interface{} `json:"page"`
 }
 
 // Authenticate authenticates the given authorization request.
-func (s *AuthService) Authenticate(ctx context.Context, authReq *AuthRequest) (*Credentials, *http.Response, error) {
-	if *authReq.Username == "" {
-		return nil, nil, ErrMissingUsername
+func Authenticate(ctx context.Context, host, username, password string) (*Credentials, error) {
+	if "" == host {
+		return nil, ErrMissingHost
 	}
 
-	if *authReq.Password == "" {
-		return nil, nil, ErrMissingPassword
+	if username == "" {
+		return nil, ErrMissingUsername
 	}
 
-	endpoint := "/api/xcr/v3/xauth"
-
-	body, resp, err := s.client.post(ctx, endpoint, new(authResponse), authReq)
-	if err != nil {
-		return nil, resp, err
+	if password == "" {
+		return nil, ErrMissingPassword
 	}
-	return &body.(*authResponse).Data[0], resp, nil
+
+	// create api client
+	http, err := NewClient(host, nil, nil)
+	if nil != err {
+		return nil, err
+	}
+
+	// create request object
+	req := NewRequest("/api/xcr/v3/xauth", nil, nil, &AuthRequest{Username: String(username), Password: String(password)})
+
+	authResponse := new(AuthResponse)
+	_, err := http.post(ctx, req, authResponse)
+	if nil != err {
+		return nil, err
+	}
+
+	var cred Credentials = authResponse.Data[0]
+	return &cred, nil
 }
