@@ -119,12 +119,12 @@ type Client struct {
 	service Service
 
 	// Services used for talking to different parts of the ENF API.
-	DNS      *DNSService
+	/*DNS      *DNSService
 	Domain   *DomainService
 	Endpoint *EndpointService
 	Firewall *FirewallService
 	Network  *NetworkService
-	User     *UserService
+	User     *UserService*/
 }
 
 type Service struct {
@@ -192,12 +192,12 @@ func NewClient(host string, ts TokenSource, httpClient *http.Client) (*Client, e
 		userAgent:  defaultUserAgent,
 	}
 	c.service.client = c
-	c.Domains = (*DomainService)(&c.service)
-	c.Endpoint = (*EndpointService)(&c.service)
-	c.DNS = (*DNSService)(&c.service)
-	c.Firewall = (*FirewallService)(&c.service)
-	c.Network = (*NetworkService)(&c.service)
-	c.User = (*UserService)(&c.service)
+	/*	c.Domains = (*DomainService)(&c.service)
+		c.Endpoint = (*EndpointService)(&c.service)
+		c.DNS = (*DNSService)(&c.service)
+		c.Firewall = (*FirewallService)(&c.service)
+		c.Network = (*NetworkService)(&c.service)
+		c.User = (*UserService)(&c.service)*/
 	return c, nil
 }
 
