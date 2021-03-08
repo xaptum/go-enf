@@ -2,127 +2,69 @@ package enf
 
 import (
 	"fmt"
-	"net/http"
-	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"reflect"
-	"strings"
+	"runtime"
 	"testing"
 )
 
-type TestParams struct {
+// assert fails the test if the condition is false.
+/*func assert(tb testing.TB, condition bool, msg string, v ...interface{}) {
+	if !condition {
+		_, file, line, _ := runtime.Caller(1)
+		fmt.Printf("\033[31m%s:%d: "+msg+"\033[39m\n\n", append([]interface{}{filepath.Base(file), line}, v...)...)
+		tb.FailNow()
+	}
+    }*/
 
-	// Path is the API path.
-	Path string
-
-	// RequestBody is the body of the request. For GET/DELETE requests,
-	// RequestBody should be an empty struct.
-	RequestBody interface{}
-
-	// ResponseBodyMock is the body of the response from the mock server
-	// for this test.
-	ResponseBodyMock string
-
-	// Expected is the expected result from calling Method.
-	Expected interface{}
-
-	// Method is the method being tested.
-	Method func(*Client) (interface{}, *http.Response, error)
-
-	// T is the testing type used for managing test state and logging.
-	T *testing.T
-}
-
-// setup sets up a test HTTP server along with an enf.Client that is
-// configured to talk to that test server. Test should register
-// handlers on mux which provides mock responses for the API method
-// being tested.
-func setup() (client *Client, mux *http.ServeMux, teardown func()) {
-	mux = http.NewServeMux()
-	server := httptest.NewServer(mux)
-	client, _ = NewClient(server.URL, nil)
-
-	return client, mux, server.Close
-}
-
-// Each of the following four functions provides an easy, abstracted
-// way to test an API method. For examples of using these functions,
-// look at any of the testing files.
-func getTest(testingParameters *TestParams) interface{} {
-	return checkMethod("GET", testingParameters)
-}
-
-func postTest(testingParameters *TestParams) interface{} {
-	return checkMethod("POST", testingParameters)
-}
-
-func putTest(testingParameters *TestParams) interface{} {
-	return checkMethod("PUT", testingParameters)
-}
-
-func deleteTest(testingParameters *TestParams) interface{} {
-	return checkMethod("DELETE", testingParameters)
-}
-
-// checkMethod does the hard work for verifying that the method being
-// tested gives the right output. checkMethod sets up the dependencies,
-// mocks out the path, and checks for equality with the expected and actual responses.
-func checkMethod(methodType string, testingParameters *TestParams) interface{} {
-	client, mux, teardown := setup()
-	defer teardown()
-
-	mockPath(testingParameters, methodType, mux)
-
-	result, _, err := testingParameters.Method(client)
+// ok fails the test if an err is not nil.
+func ok(tb testing.TB, err error) {
 	if err != nil {
-		testingParameters.T.Error(err)
-	}
-
-	if !reflect.DeepEqual(result, testingParameters.Expected) {
-		testingParameters.T.Errorf("Method returned %+v, want %+v", result, testingParameters.Expected)
-	}
-
-	return result
-}
-
-// mockPath creates a mock response on a mux for a specific path included in the testing
-// parameters.
-func mockPath(testingParameters *TestParams, methodType string, mux *http.ServeMux) {
-	mux.HandleFunc(testingParameters.Path, func(w http.ResponseWriter, r *http.Request) {
-		testMethod(testingParameters.T, r, methodType)
-		testHeaders(testingParameters.T, methodType, mux, r)
-		fmt.Fprint(w, testingParameters.ResponseBodyMock)
-	})
-}
-
-// testHeaders verifies that the headers are appropriate for the given request.
-func testHeaders(t *testing.T, methodType string, mux *http.ServeMux, r *http.Request) {
-	switch methodType {
-	case "GET":
-		testGetHeaders(t, r)
-	case "POST":
-		testPostPutHeaders(t, r)
-	case "PUT":
-		testPostPutHeaders(t, r)
+		_, file, line, _ := runtime.Caller(1)
+		fmt.Printf("\033[31m%s:%d: unexpected error: %s\033[39m\n\n", filepath.Base(file), line, err.Error())
+		tb.FailNow()
 	}
 }
 
-func testGetHeaders(t *testing.T, r *http.Request) {
-	testHeader(t, r, "Accept", strings.Join(wantAcceptHeaders, ", "))
-}
-
-func testPostPutHeaders(t *testing.T, r *http.Request) {
-	testHeader(t, r, "Accept", strings.Join(wantAcceptHeaders, ", "))
-	testHeader(t, r, "Content-Type", strings.Join(wantContentTypeHeaders, ", "))
-}
-
-func testMethod(t *testing.T, r *http.Request, want string) {
-	if got := r.Method; got != want {
-		t.Errorf("Request method: %v, want %v", got, want)
+// AssertError fails the test if err is nil
+func assertError(tb testing.TB, err error) {
+	if err == nil {
+		_, file, line, _ := runtime.Caller(1)
+		fmt.Printf("\033[31m%s:%d: Expected error but got nil \033[39m\n\n", filepath.Base(file), line)
+		tb.FailNow()
 	}
 }
 
-func testHeader(t *testing.T, r *http.Request, header string, want string) {
-	if got := r.Header.Get(header); got != want {
-		t.Errorf("Header.Get(%q) returned %q, want %q", header, got, want)
+// Equals fails the test if exp is not equal to act.
+func equals(tb testing.TB, exp, act interface{}) {
+	if !reflect.DeepEqual(exp, act) {
+		_, file, line, _ := runtime.Caller(1)
+		fmt.Printf("\033[31m%s:%d:\n\n\texp: %#v\n\n\tgot: %#v\033[39m\n\n", filepath.Base(file), line, exp, act)
+		tb.FailNow()
 	}
+}
+
+func TestMain(m *testing.M) {
+	code := m.Run()
+	os.Exit(code)
+}
+
+func TestNew(t *testing.T) {
+	client, err := New()
+	ok(t, err)
+	equals(t, "https://api.xaptum.io", client.baseUrl)
+	equals(t, "", client.authToken)
+}
+
+func TestNewWithHost(t *testing.T) {
+	client, err := New("http://localhost:9090")
+	ok(t, err)
+	equals(t, "http://localhost:9090", client.baseUrl)
+	equals(t, "", client.authToken)
+}
+
+func TestNewInvalidHost(t *testing.T) {
+	_, err := New("hello", "world")
+	assertError(t, err)
 }
