@@ -37,15 +37,43 @@ type Client struct {
 	User     *UserService*/
 }
 
+func (client *Client) Get(ctx context.Context, path string, result interface{}) error {
+	// call the api
+	resp, err := client.rst.R().
+		SetContext(ctx).
+		Get(path)
+	return client.processApiRespone(resp, err, result)
+}
+
 func (client *Client) Post(ctx context.Context, path string, request interface{}, result interface{}) error {
 	// call the api
 	resp, err := client.rst.R().
 		SetContext(ctx).
 		SetBody(request).
 		Post(path)
+	return client.processApiRespone(resp, err, result)
+}
 
-	// now check for error
-	if nil != err {
+func (client *Client) Put(ctx context.Context, path string, request interface{}, result interface{}) error {
+	// call the api
+	resp, err := client.rst.R().
+		SetContext(ctx).
+		SetBody(request).
+		Put(path)
+	return client.processApiRespone(resp, err, result)
+}
+
+func (client *Client) Delete(ctx context.Context, path string, result interface{}) error {
+	// call the api
+	resp, err := client.rst.R().
+		SetContext(ctx).
+		Get(path)
+	return client.processApiRespone(resp, err, result)
+}
+
+func (client *Client) processApiRespone(resp *resty.Response, respErr error, result interface{}) error {
+	// check for response error
+	if nil != respErr {
 		// wrap as api error
 		msg := "Unable to create api request"
 		apiErr := &EnfApiError{
@@ -55,10 +83,11 @@ func (client *Client) Post(ctx context.Context, path string, request interface{}
 		return apiErr
 	}
 
-	return processApiRespone(resp.StatusCode(), resp.Body(), result)
-}
+	// handle response
+	statusCode := resp.StatusCode()
+	body := resp.Body()
 
-func processApiRespone(statusCode int, body []byte, result interface{}) error {
+	// create a place holder for api errors
 	var apiErr = &EnfApiError{
 		StatusCode: statusCode,
 	}
@@ -114,5 +143,6 @@ func processApiRespone(statusCode int, body []byte, result interface{}) error {
 		apiErr.ErrorMessage = &msg
 	}
 
+	// if we reached here that means there was an api error
 	return apiErr
 }

@@ -31,27 +31,21 @@ type authResponse struct {
 
 // Authenticate authenticates the given authorization request.
 func (svc *AuthService) Authenticate(ctx context.Context, username, password string) (*Credentials, error) {
-	// call the authentication api
+	// create result struct
 	result := &authResponse{}
 
-	/*resp, err := svc.client.rst.R().
-	SetContext(ctx).
-	SetBody(AuthRequest{
-		Username: username,
-		Password: password,
-	}).
-	SetResult(result).
-	Post("/xauth/v1/authenticate")*/
-
-	// Check if request failed
+	// call the authentication api
 	err := svc.client.Post(ctx, "/xauth/v1/authenticate",
 		AuthRequest{
 			Username: username,
 			Password: password,
 		}, result)
 
+	// Check if request failed
 	if nil != err {
 		return nil, err
 	}
+
+	// return credentials
 	return &result.Data[0], nil
 }
