@@ -30,34 +30,6 @@ var (
 	defaultUserAgent = fmt.Sprintf("go-enf/%s (+%s; %s)", ProjectVersion, ProjectURL, runtime.Version())
 )
 
-// Client represents a wrapper for the HTTP client that communicates with the API.
-type Client struct {
-	// HTTP client used to communicate with the API.
-	httpClient *resty.Client
-
-	// Base URL
-	baseUrl string
-
-	// The API token for authenticating with the API
-	authToken string
-
-	// Reuse a single struct instead of allocating one for each service on the heap
-	service Service
-
-	// Services used for talking to different parts of the ENF API.
-	Auth *AuthService
-	/*DNS      *DNSService
-	Domain   *DomainService
-	Endpoint *EndpointService
-	Firewall *FirewallService
-	Network  *NetworkService
-	User     *UserService*/
-}
-
-type Service struct {
-	client *Client
-}
-
 // NewClient returns a new ENF API client for the provided domain. If
 // a nil httpClient is provided, a new http.Client will be used.  To
 // use API methods which require authentication, provide an
@@ -103,11 +75,11 @@ func NewWithClient(httpClient *http.Client, host ...string) (*Client, error) {
 	}
 
 	// create a resty client
-	restyClient := resty.NewWithClient(httpClient)
-	restyClient.SetHostURL(baseUrl.String())
+	rst := resty.NewWithClient(httpClient)
+	rst.SetHostURL(baseUrl.String())
 
 	// set headers for all requests
-	restyClient.SetHeaders(map[string]string{
+	rst.SetHeaders(map[string]string{
 		"Accept":       MediaTypeJSON,
 		"Content-Type": MediaTypeJSON,
 		"User-Agent":   defaultUserAgent,
@@ -115,8 +87,8 @@ func NewWithClient(httpClient *http.Client, host ...string) (*Client, error) {
 
 	// create enf api client
 	client := &Client{
-		httpClient: restyClient,
-		baseUrl:    baseUrl.String(),
+		rst:     rst,
+		baseUrl: baseUrl.String(),
 	}
 	client.service.client = client
 	client.Auth = (*AuthService)(&client.service)

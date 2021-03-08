@@ -2,7 +2,6 @@ package enf
 
 import (
 	"context"
-	"fmt"
 )
 
 // AuthService handles communication with authentication related
@@ -25,28 +24,34 @@ type Credentials struct {
 	UserID   int64  `json:"user_id"`
 }
 
-/*type authResponse struct {
+type authResponse struct {
 	Data []Credentials          `json:"data"`
 	Page map[string]interface{} `json:"page"`
-    }*/
+}
 
 // Authenticate authenticates the given authorization request.
 func (svc *AuthService) Authenticate(ctx context.Context, username, password string) (*Credentials, error) {
 	// call the authentication api
-	resp, err := svc.client.httpClient.R().
-		SetContext(ctx).
-		SetBody(AuthRequest{
+	result := &authResponse{}
+
+	/*resp, err := svc.client.rst.R().
+	SetContext(ctx).
+	SetBody(AuthRequest{
+		Username: username,
+		Password: password,
+	}).
+	SetResult(result).
+	Post("/xauth/v1/authenticate")*/
+
+	// Check if request failed
+	err := svc.client.Post(ctx, "/xauth/v1/authenticate",
+		AuthRequest{
 			Username: username,
 			Password: password,
-		}).
-		Post("/api/xauth/v1/authenticate")
+		}, result)
 
-	if err != nil {
+	if nil != err {
 		return nil, err
 	}
-
-	fmt.Println("Resp: " + string(resp.Body()))
-	//	fmt.Println("Resp Status: " + string(resp.StatusCode()))
-	str := resp.String()
-	return &Credentials{Username: str}, nil
+	return &result.Data[0], nil
 }
