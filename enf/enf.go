@@ -45,6 +45,7 @@ type Client struct {
 	service Service
 
 	// Services used for talking to different parts of the ENF API.
+	Auth *AuthService
 	/*DNS      *DNSService
 	Domain   *DomainService
 	Endpoint *EndpointService
@@ -118,6 +119,7 @@ func NewWithClient(httpClient *http.Client, host ...string) (*Client, error) {
 		baseUrl:    baseUrl.String(),
 	}
 	client.service.client = client
+	client.Auth = (*AuthService)(&client.service)
 	/*	c.Domains = (*DomainService)(&c.service)
 		c.Endpoint = (*EndpointService)(&c.service)
 		c.DNS = (*DNSService)(&c.service)

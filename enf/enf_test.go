@@ -1,6 +1,7 @@
 package enf
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -67,4 +68,14 @@ func TestNewWithHost(t *testing.T) {
 func TestNewInvalidHost(t *testing.T) {
 	_, err := New("hello", "world")
 	assertError(t, err)
+}
+
+func TestAuthenticate(t *testing.T) {
+	// create client
+	client, err := New("dev.xaptum.io")
+	ok(t, err)
+
+	credentials, err := client.Auth.Authenticate(context.Background(), "xap@admin", "Test1234!")
+	ok(t, err)
+	equals(t, "xap@admin", credentials.Username)
 }
