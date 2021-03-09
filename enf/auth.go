@@ -46,6 +46,10 @@ func (svc *AuthService) Authenticate(ctx context.Context, username, password str
 		return nil, err
 	}
 
+	// update the client with auth token
+	credentials := &result.Data[0]
+	svc.client.authToken = credentials.Token
+
 	// return credentials
-	return &result.Data[0], nil
+	return credentials, nil
 }

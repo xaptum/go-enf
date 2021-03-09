@@ -1,6 +1,9 @@
 package enf
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // ErrorResponse represents the error response from the API.
 type EnfApiError struct {
@@ -19,7 +22,7 @@ func (e *EnfApiError) Error() string {
 	var msg string
 
 	if nil != e.CodeError {
-		msg = fmt.Sprintf("%v: %v", e.CodeError.Code, e.CodeError.Text)
+		msg = fmt.Sprintf("%v: %v", strings.ToUpper(e.CodeError.Code), e.CodeError.Text)
 	} else if nil != e.ReasonError {
 		msg = fmt.Sprintf("%v", e.ReasonError.Reason)
 	} else if nil != e.ErrorMessage {

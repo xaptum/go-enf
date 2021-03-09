@@ -111,5 +111,5 @@ func TestAuthenticateFail(t *testing.T) {
 	// call the api
 	credentials, err := client.Auth.Authenticate(context.Background(), "xap@admin", "xxxxx")
 	assert(t, nil == credentials, "Verify credentials is nil")
-	equals(t, "authentication_failed: Authentication Failed", err.Error())
+	equals(t, "AUTHENTICATION_FAILED: Authentication Failed", err.Error())
 }

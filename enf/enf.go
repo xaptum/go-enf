@@ -87,8 +87,9 @@ func NewWithClient(httpClient *http.Client, host ...string) (*Client, error) {
 
 	// create enf api client
 	client := &Client{
-		rst:     rst,
-		baseUrl: baseUrl.String(),
+		rst:       rst,
+		baseUrl:   baseUrl.String(),
+		authToken: "", // initialize to empty string
 	}
 	client.service.client = client
 	client.Auth = (*AuthService)(&client.service)

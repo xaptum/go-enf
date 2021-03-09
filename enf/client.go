@@ -41,6 +41,7 @@ func (client *Client) Get(ctx context.Context, path string, result interface{}) 
 	// call the api
 	resp, err := client.rst.R().
 		SetContext(ctx).
+		SetAuthToken(client.authToken).
 		Get(path)
 	return client.processApiRespone(resp, err, result)
 }
@@ -49,6 +50,7 @@ func (client *Client) Post(ctx context.Context, path string, request interface{}
 	// call the api
 	resp, err := client.rst.R().
 		SetContext(ctx).
+		SetAuthToken(client.authToken).
 		SetBody(request).
 		Post(path)
 	return client.processApiRespone(resp, err, result)
@@ -58,6 +60,7 @@ func (client *Client) Put(ctx context.Context, path string, request interface{},
 	// call the api
 	resp, err := client.rst.R().
 		SetContext(ctx).
+		SetAuthToken(client.authToken).
 		SetBody(request).
 		Put(path)
 	return client.processApiRespone(resp, err, result)
@@ -67,7 +70,8 @@ func (client *Client) Delete(ctx context.Context, path string, result interface{
 	// call the api
 	resp, err := client.rst.R().
 		SetContext(ctx).
-		Get(path)
+		SetAuthToken(client.authToken).
+		Delete(path)
 	return client.processApiRespone(resp, err, result)
 }
 
