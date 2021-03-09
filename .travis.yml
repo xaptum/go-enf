@@ -1,7 +1,7 @@
 language: go
 
 go:
-  - "1.12.x"
+  - "1.14.x"
 
 matrix:
   fast_finish: true
@@ -20,8 +20,6 @@ install:
   - make tools
 
 script:
-  - make lint
-  - make build
   - make test
 
 after_success:

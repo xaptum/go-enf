@@ -10,7 +10,7 @@ export GO111MODULE := on
 # Setup              #
 ######################
 tools:
-	GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.37.1
 .PHONY: tools
 
 ######################
