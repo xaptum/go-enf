@@ -44,6 +44,23 @@ const (
 	MediaTypeJSON = "application/json"
 
 	DefaultHost = "https://api.xaptum.io"
+
+	XcrBasePath      = "/api/xcr/v3"
+	FirewallBasePath = "/api/xfw/v2"
+	DnsBasePath      = "/api/xdns/v1"
+	IamBasePath      = "/api/xiam/v1"
+	CaptiveBasePath  = "/api/captive/v1"
+
+	ActiveStatus   = "ACTIVE"
+	InactiveStatus = "INACTIVE"
+
+	XaptumAdmin  = "XAPTUM_ADMIN"
+	CaptiveAdmin = "CAPTIVE_ADMIN"
+	IamAdmin     = "IAM_ADMIN"
+	DomainAdmin  = "DOMAIN_ADMIN"
+	DomainUser   = "DOMAIN_USER"
+	NetworkAdmin = "NETWORK_ADMIN"
+	NetworkUser  = "NETWORK_USER"
 )
 
 var (
@@ -112,15 +129,35 @@ func NewWithClient(httpClient *http.Client, host ...string) (*Client, error) {
 		authToken: "", // initialize to empty string
 	}
 	client.service.client = client
-	client.Auth = (*AuthService)(&client.service)
-	/*	c.Domains = (*DomainService)(&c.service)
-		c.Endpoint = (*EndpointService)(&c.service)
-		c.DNS = (*DNSService)(&c.service)
-		c.Firewall = (*FirewallService)(&c.service)
-		c.Network = (*NetworkService)(&c.service)
-		c.User = (*UserService)(&c.service)*/
+	client.AuthSvc = (*AuthService)(&client.service)
+	/*	client.DomainSvc = (*DomainService)(&client.service)
+		client.EndpointSvc = (*EndpointService)(&client.service)
+		client.DnsSvc = (*DnsService)(&client.service)
+		client.FirewallSvc = (*FirewallService)(&client.service)
+		client.NetworkSvc = (*NetworkService)(&client.service)*/
+	client.UserSvc = (*UserService)(&client.service)
 	return client, nil
 }
+
+func xcrApiPath(path string) string {
+	return XcrBasePath + path
+}
+
+/*func firewallApiPath(path string) string {
+	return FirewallBasePath + path
+}
+
+func dnsApiPath(path string) string {
+	return DnsBasePath + path
+}
+
+func iamApiPath(path string) string {
+	return IamBasePath + path
+}
+
+func captiveApiPath(path string) string {
+	return CaptiveBasePath + path
+    }*/
 
 // All the exported methods in this file are designed to be general-purpose HTTP helpers. These methods
 // will accept any request struct, and support any struct type you want the response to be stored in.

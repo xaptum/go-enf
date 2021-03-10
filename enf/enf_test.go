@@ -21,7 +21,6 @@
 package enf
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -29,7 +28,6 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/jarcoal/httpmock"
 	_ "github.com/jarcoal/httpmock"
 )
 
@@ -91,45 +89,4 @@ func TestNewWithHost(t *testing.T) {
 func TestNewInvalidHost(t *testing.T) {
 	_, err := New("hello", "world")
 	assertError(t, err)
-}
-
-func TestAuthenticateSuccess(t *testing.T) {
-	// create client
-	client, err := New("http://localhost")
-	ok(t, err)
-
-	// initialize httpmock
-	httpmock.ActivateNonDefault(client.rst.GetClient())
-	defer httpmock.DeactivateAndReset()
-
-	// setup mocks
-	fixture := `{"data":[{"token":"authtoken","user_id":1,"username":"xap@admin"}],"page":{"curr":"","next":"","prev":""}}`
-	httpmock.RegisterResponder("POST", "http://localhost/xauth/v1/authenticate",
-		httpmock.NewStringResponder(200, fixture))
-
-	// call the api
-	credentials, err := client.Auth.Authenticate(context.Background(), "xap@admin", "xxxxx")
-	ok(t, err)
-	equals(t, "xap@admin", credentials.Username)
-	assert(t, "" != credentials.Token, "Check Token")
-}
-
-func TestAuthenticateFail(t *testing.T) {
-	// create client
-	client, err := New("http://localhost")
-	ok(t, err)
-
-	// initialize httpmock
-	httpmock.ActivateNonDefault(client.rst.GetClient())
-	defer httpmock.DeactivateAndReset()
-
-	// setup mocks
-	fixture := `{"error":{"code":"authentication_failed","text":"Authentication Failed"}}`
-	httpmock.RegisterResponder("POST", "http://localhost/xauth/v1/authenticate",
-		httpmock.NewStringResponder(400, fixture))
-
-	// call the api
-	credentials, err := client.Auth.Authenticate(context.Background(), "xap@admin", "xxxxx")
-	assert(t, nil == credentials, "Verify credentials is nil")
-	equals(t, "AUTHENTICATION_FAILED: Authentication Failed", err.Error())
 }
