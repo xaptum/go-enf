@@ -50,7 +50,9 @@ const (
 	DnsBasePath      = "/api/xdns/v1"
 	IamBasePath      = "/api/xiam/v1"
 	CaptiveBasePath  = "/api/captive/v1"
+)
 
+var (
 	ActiveStatus   = "ACTIVE"
 	InactiveStatus = "INACTIVE"
 
@@ -61,6 +63,11 @@ const (
 	DomainUser   = "DOMAIN_USER"
 	NetworkAdmin = "NETWORK_ADMIN"
 	NetworkUser  = "NETWORK_USER"
+
+	DnsAAAA  = "AAAA"
+	DnsCNAME = "CNAME"
+	DnsTXT   = "TXT"
+	DnsSRV   = "SRV"
 )
 
 var (

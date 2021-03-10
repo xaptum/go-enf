@@ -36,31 +36,25 @@ type UserRole struct {
 }
 
 type User struct {
-	Id           *int        `json:"id"`
-	CreatedBy    *string     `json:"created_by"`
-	InsertedDate *time.Time  `json:"inserted_date"`
-	ModifiedDate *time.Time  `json:"modified_date"`
-	Description  *string     `json:"description"`
-	FullName     *string     `json:"full_name"`
-	LastLogin    *time.Time  `json:"last_login"`
-	Status       *string     `json:"status"`
-	Username     *string     `json:"username"`
-	DomainId     *int        `json:"domain_id"`
-	Domain       *string     `json:"domain"`
-	Roles        []*UserRole `json:"roles"`
+	Id          *int        `json:"id"`
+	Description *string     `json:"description"`
+	FullName    *string     `json:"full_name"`
+	LastLogin   *time.Time  `json:"last_login"`
+	Status      *string     `json:"status"`
+	Username    *string     `json:"username"`
+	DomainId    *int        `json:"domain_id"`
+	Domain      *string     `json:"domain"`
+	Roles       []*UserRole `json:"roles"`
 }
 
 type Invite struct {
-	Id           *int        `json:"id"`
-	CreatedBy    *string     `json:"created_by"`
-	InsertedDate *time.Time  `json:"inserted_date"`
-	ModifiedDate *time.Time  `json:"modified_date"`
-	Email        *string     `json:"email"`
-	InviteToken  *string     `json:"invite_token"`
-	Name         *string     `json:"name"`
-	DomainId     *int        `json:"domain_id"`
-	Domain       *string     `json:"domain"`
-	Roles        []*UserRole `json:"roles"`
+	Id          *int        `json:"id"`
+	Email       *string     `json:"email"`
+	InviteToken *string     `json:"invite_token"`
+	Name        *string     `json:"name"`
+	DomainId    *int        `json:"domain_id"`
+	Domain      *string     `json:"domain"`
+	Roles       []*UserRole `json:"roles"`
 }
 
 type userResponse struct {
