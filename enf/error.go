@@ -27,9 +27,9 @@ import (
 
 // ErrorResponse represents the error response from the API.
 type EnfApiError struct {
-	StatusCode   int     `json:"-"`
-	ErrorMessage *string `json:"-"`
-	CodeError    *struct {
+	StatusCode    int     `json:"-"`
+	ErrorMessage  *string `json:"-"`
+	CodeTextError *struct {
 		Code string `json:"code"`
 		Text string `json:"text"`
 	} `json:"error"`
@@ -41,8 +41,8 @@ type EnfApiError struct {
 func (e *EnfApiError) Error() string {
 	var msg string
 
-	if nil != e.CodeError {
-		msg = fmt.Sprintf("%v: %v", strings.ToUpper(e.CodeError.Code), e.CodeError.Text)
+	if nil != e.CodeTextError {
+		msg = fmt.Sprintf("%v: %v", strings.ToUpper(e.CodeTextError.Code), e.CodeTextError.Text)
 	} else if nil != e.ReasonError {
 		msg = fmt.Sprintf("%v", e.ReasonError.Reason)
 	} else if nil != e.ErrorMessage {
@@ -52,4 +52,24 @@ func (e *EnfApiError) Error() string {
 	}
 
 	return msg
+}
+
+func (e *EnfApiError) SetCodeText(code, text string) {
+	e.CodeTextError = &struct {
+		Code string `json:"code"`
+		Text string `json:"text"`
+	}{
+		Code: code,
+		Text: text,
+	}
+	e.ReasonError = nil
+}
+
+func (e *EnfApiError) SetReason(reason string) {
+	e.CodeTextError = nil
+	e.ReasonError = &struct {
+		Reason string `json:"reason"`
+	}{
+		Reason: reason,
+	}
 }

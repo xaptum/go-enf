@@ -138,28 +138,24 @@ func (client *Client) processApiRespone(resp *resty.Response, respErr error, res
 
 	case 403:
 		// method not found error
-		apiErr.CodeError.Code = "http_error"
-		apiErr.CodeError.Text = "Method Not Found"
+		apiErr.SetCodeText("http_error", "Method Not Found")
 
 	case 415:
 		// media type error
-		apiErr.CodeError.Code = "http_error"
-		apiErr.CodeError.Text = "Unsupported Media Type"
+		apiErr.SetCodeText("http_error", "Unsupported Media Type")
 
 	case 404:
 		// parse response body for error json
 		if err := json.Unmarshal(body, apiErr); nil != err {
 			// not a json error message. assume URL not found
-			apiErr.CodeError.Code = "http_error"
-			apiErr.CodeError.Text = "Not Found"
+			apiErr.SetCodeText("http_error", "Not Found")
 		}
 
 	case 500:
 		// parse response body for error json
 		if err := json.Unmarshal(body, apiErr); nil != err {
 			// not a json error message. encode a genric error message
-			apiErr.CodeError.Code = "server_error"
-			apiErr.CodeError.Text = "Server error received without details"
+			apiErr.SetCodeText("server_error", "Server error received without details")
 		}
 
 	default:
