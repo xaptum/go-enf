@@ -20,42 +20,10 @@
 //-------------------------------------------------------------------------------------------
 package enf
 
-import (
-	"encoding/json"
-	"fmt"
-	"testing"
-)
-
-func TestDnsRecordJson(t *testing.T) {
-	// create a txt record
-	value := MakeTxtValue("v=spf; domain.com; hello")
-
-	domain := "fd00::/48"
-	id := "uuid-uu-uuid"
-	name := "srv.local"
-	ttl := 300
-	zone := "zone-uuid-uuid"
-
-	rec := &DnsRecord{
-		Domain:     &domain,
-		Id:         &id,
-		Name:       &name,
-		Privileged: false,
-		Ttl:        &ttl,
-		Type:       &DnsTXT,
-		Value:      value,
-		ZoneId:     &zone,
-	}
-
-	// able to marshall
-	jsn, err := json.Marshal(rec)
-	ok(t, err)
-
-	// now check unmarshal
-	rec1 := &DnsRecord{}
-	err = json.Unmarshal(jsn, rec1)
-	ok(t, err)
-
-	fmt.Println(rec1.TXT().Txt)
-	equals(t, "", string(jsn))
+type Ratelimit struct {
+	PacketsPerSecond *int `json:"packets_per_second"`
+	PacketsBurstSize *int `json:"packets_burst_size"`
+	BytesPerSecond   *int `json:"bytes_per_second"`
+	BytesBurstSize   *int `json:"bytes_burst_size"`
+	Inherit          bool `json:"inherit"`
 }

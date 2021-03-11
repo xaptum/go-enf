@@ -78,7 +78,7 @@ func (svc *UserService) Me(ctx context.Context) (*User, error) {
 	result := &userResponse{}
 
 	// call the me api
-	err := svc.client.Get(ctx, xcrApiPath("/me"), result)
+	err := svc.client.Get(ctx, XcrApiPath("/me"), result)
 
 	// check if request failed
 	if nil != err {

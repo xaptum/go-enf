@@ -20,6 +20,8 @@
 //-------------------------------------------------------------------------------------------
 package enf
 
+type DnsService Service
+
 type DnsRecordValue map[string]interface{}
 
 type txtValue struct {
@@ -67,7 +69,7 @@ func (r *DnsRecord) TXT() *txtValue {
 	res := &txtValue{}
 
 	if nil != r.Value {
-		res.Txt = nil
+		res.Txt = toString((*r.Value)["txt"])
 	}
 
 	return res
@@ -77,7 +79,7 @@ func (r *DnsRecord) AAAA() *aaaaValue {
 	res := &aaaaValue{}
 
 	if nil != r.Value {
-		res.Ipv6 = nil
+		res.Ipv6 = toString((*r.Value)["ipv6"])
 	}
 
 	return res
@@ -87,8 +89,8 @@ func (r *DnsRecord) AAAA() *aaaaValue {
 func (r *DnsRecord) CNAME() *cnameValue {
 	res := &cnameValue{}
 
-	if nil == r.Value {
-		res.Dname = nil
+	if nil != r.Value {
+		res.Dname = toString((*r.Value)["dname"])
 	}
 
 	return res
@@ -97,11 +99,11 @@ func (r *DnsRecord) CNAME() *cnameValue {
 func (r *DnsRecord) SRV() *srvValue {
 	res := &srvValue{}
 
-	if nil == r.Value {
-		res.Weight = nil
-		res.Priority = nil
-		res.Port = nil
-		res.Target = nil
+	if nil != r.Value {
+		res.Weight = toInt((*r.Value)["weight"])
+		res.Priority = toInt((*r.Value)["priority"])
+		res.Port = toInt((*r.Value)["port"])
+		res.Target = toString((*r.Value)["target"])
 	}
 
 	return res
@@ -121,7 +123,28 @@ func MakeTxtValue(txt string) *map[string]interface{} {
 	return &m
 }
 
-/*func toString(v interface{}) *string {
+func MakeAaaaValue(ipv6 string) *map[string]interface{} {
+	m := make(map[string]interface{})
+	m["ipv6"] = ipv6
+	return &m
+}
+
+func MakeCnameValue(dname string) *map[string]interface{} {
+	m := make(map[string]interface{})
+	m["dname"] = dname
+	return &m
+}
+
+func MakeSrvValue(priority, weight, port int, target string) *map[string]interface{} {
+	m := make(map[string]interface{})
+	m["weight"] = weight
+	m["priority"] = priority
+	m["port"] = port
+	m["target"] = target
+	return &m
+}
+
+func toString(v interface{}) *string {
 	if nil == v {
 		return nil
 	}
@@ -135,4 +158,4 @@ func toInt(v interface{}) *int {
 	}
 	i := int(v.(float64))
 	return &i
-    }*/
+}

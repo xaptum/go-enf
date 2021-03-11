@@ -18,7 +18,7 @@
 // @since March 09, 2021
 //
 //-------------------------------------------------------------------------------------------
-package enf
+package internal
 
 import (
 	"context"
@@ -29,11 +29,10 @@ import (
 
 func TestAuthenticateSuccess(t *testing.T) {
 	// create client
-	client, err := New("http://localhost")
+	client, err := mockClient("http://localhost")
 	ok(t, err)
 
-	// initialize httpmock
-	httpmock.ActivateNonDefault(client.rst.GetClient())
+	// deactivate httpmock
 	defer httpmock.DeactivateAndReset()
 
 	// setup mocks
@@ -50,11 +49,10 @@ func TestAuthenticateSuccess(t *testing.T) {
 
 func TestAuthenticateFail(t *testing.T) {
 	// create client
-	client, err := New("http://localhost")
+	client, err := mockClient("http://localhost")
 	ok(t, err)
 
-	// initialize httpmock
-	httpmock.ActivateNonDefault(client.rst.GetClient())
+	// deactive httpmock
 	defer httpmock.DeactivateAndReset()
 
 	// setup mocks

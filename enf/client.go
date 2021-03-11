@@ -48,13 +48,17 @@ type Client struct {
 	service Service
 
 	// Services used for talking to different parts of the ENF API.
-	AuthSvc *AuthService
-	/*DnsSvc      *DnsService
+	AuthSvc     *AuthService
+	DnsSvc      *DnsService
 	DomainSvc   *DomainService
 	EndpointSvc *EndpointService
 	FirewallSvc *FirewallService
-	NetworkSvc  *NetworkService*/
-	UserSvc *UserService
+	NetworkSvc  *NetworkService
+	UserSvc     *UserService
+}
+
+func (client *Client) BaseUrl() string {
+	return client.baseUrl
 }
 
 func (client *Client) Get(ctx context.Context, path string, result interface{}) error {

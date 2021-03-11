@@ -53,8 +53,11 @@ const (
 )
 
 var (
+	CustomerSource = "CUSTOMER_SOURCE"
+
 	ActiveStatus   = "ACTIVE"
 	InactiveStatus = "INACTIVE"
+	ReadyStatus    = "READY"
 
 	XaptumAdmin  = "XAPTUM_ADMIN"
 	CaptiveAdmin = "CAPTIVE_ADMIN"
@@ -68,6 +71,25 @@ var (
 	DnsCNAME = "CNAME"
 	DnsTXT   = "TXT"
 	DnsSRV   = "SRV"
+
+	DefaultLimit = "default"
+	MaxLimit     = "max"
+	CurrentLimit = "current"
+
+	Online  = "ONLINE"
+	Offline = "OFFLINE"
+
+	Connect    = "CONNECT"
+	Disconnect = "DISCONNECT"
+
+	Ingress = "INGRESS"
+	Egress  = "EGRESS"
+	Accept  = "ACCEPT"
+	Drop    = "DROP"
+	TCP     = "TCP"
+	UDP     = "UDP"
+	ICMP6   = "ICMP6"
+	IP6     = "IP6"
 )
 
 var (
@@ -137,34 +159,34 @@ func NewWithClient(httpClient *http.Client, host ...string) (*Client, error) {
 	}
 	client.service.client = client
 	client.AuthSvc = (*AuthService)(&client.service)
-	/*	client.DomainSvc = (*DomainService)(&client.service)
-		client.EndpointSvc = (*EndpointService)(&client.service)
-		client.DnsSvc = (*DnsService)(&client.service)
-		client.FirewallSvc = (*FirewallService)(&client.service)
-		client.NetworkSvc = (*NetworkService)(&client.service)*/
+	client.DomainSvc = (*DomainService)(&client.service)
+	client.EndpointSvc = (*EndpointService)(&client.service)
+	client.DnsSvc = (*DnsService)(&client.service)
+	client.FirewallSvc = (*FirewallService)(&client.service)
+	client.NetworkSvc = (*NetworkService)(&client.service)
 	client.UserSvc = (*UserService)(&client.service)
 	return client, nil
 }
 
-func xcrApiPath(path string) string {
+func XcrApiPath(path string) string {
 	return XcrBasePath + path
 }
 
-/*func firewallApiPath(path string) string {
+func FirewallApiPath(path string) string {
 	return FirewallBasePath + path
 }
 
-func dnsApiPath(path string) string {
+func DnsApiPath(path string) string {
 	return DnsBasePath + path
 }
 
-func iamApiPath(path string) string {
+func IamApiPath(path string) string {
 	return IamBasePath + path
 }
 
-func captiveApiPath(path string) string {
+func CaptiveApiPath(path string) string {
 	return CaptiveBasePath + path
-    }*/
+}
 
 // All the exported methods in this file are designed to be general-purpose HTTP helpers. These methods
 // will accept any request struct, and support any struct type you want the response to be stored in.

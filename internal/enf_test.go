@@ -18,17 +18,20 @@
 // @since March 08, 2021
 //
 //-------------------------------------------------------------------------------------------
-package enf
+package internal
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
 	"testing"
 
+	"github.com/jarcoal/httpmock"
 	_ "github.com/jarcoal/httpmock"
+	"github.com/xaptum/go-enf/enf"
 )
 
 // assert fails the test if the condition is false.
@@ -67,26 +70,36 @@ func equals(tb testing.TB, exp, act interface{}) {
 	}
 }
 
+// mock httpClient
+func mockClient(host string) (*enf.Client, error) {
+	// create http client
+	hc := &http.Client{}
+
+	// activate httpmockk
+	httpmock.ActivateNonDefault(hc)
+
+	// now create enf client with the mocked http client
+	return enf.NewWithClient(hc, host)
+}
+
 func TestMain(m *testing.M) {
 	code := m.Run()
 	os.Exit(code)
 }
 
 func TestNew(t *testing.T) {
-	client, err := New()
+	client, err := enf.New()
 	ok(t, err)
-	equals(t, "https://api.xaptum.io", client.baseUrl)
-	equals(t, "", client.authToken)
+	equals(t, "https://api.xaptum.io", client.BaseUrl())
 }
 
 func TestNewWithHost(t *testing.T) {
-	client, err := New("http://localhost:9090")
+	client, err := enf.New("http://localhost:9090")
 	ok(t, err)
-	equals(t, "http://localhost:9090", client.baseUrl)
-	equals(t, "", client.authToken)
+	equals(t, "http://localhost:9090", client.BaseUrl())
 }
 
 func TestNewInvalidHost(t *testing.T) {
-	_, err := New("hello", "world")
+	_, err := enf.New("hello", "world")
 	assertError(t, err)
 }
