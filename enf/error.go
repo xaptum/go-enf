@@ -46,7 +46,7 @@ func (e *EnfApiError) Error() string {
 	} else if nil != e.ReasonError {
 		msg = fmt.Sprintf("%v", e.ReasonError.Reason)
 	} else if nil != e.ErrorMessage {
-		msg = fmt.Sprintf("%v", e.ErrorMessage)
+		msg = fmt.Sprintf("%v", *e.ErrorMessage)
 	} else {
 		msg = "UNKNOWN_ERROR: server did not respond with properly formatted error message."
 	}

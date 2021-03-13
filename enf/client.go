@@ -103,7 +103,7 @@ func (client *Client) processApiRespone(resp *resty.Response, respErr error, res
 	// check for response error
 	if nil != respErr {
 		// wrap as api error
-		msg := "Unable to create api request"
+		msg := "Unable to complete api request"
 		apiErr := &EnfApiError{
 			StatusCode:   0, // TODO: may be -1?
 			ErrorMessage: &msg,
@@ -123,6 +123,13 @@ func (client *Client) processApiRespone(resp *resty.Response, respErr error, res
 	switch statusCode {
 	case 200, 201:
 		// request was successful.
+
+		// first check if result needs to converted to json
+		if nil == result {
+			return nil
+		}
+
+		// try to parse response json
 		if err := json.Unmarshal(body, result); nil != err {
 			// not a json response
 			msg := "Invalid json response"
