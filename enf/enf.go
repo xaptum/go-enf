@@ -52,7 +52,7 @@ const (
 	CaptiveBasePath  = "/api/captive/v1"
 )
 
-var (
+const (
 	CustomerSource = "CUSTOMER_SOURCE"
 
 	ActiveStatus   = "ACTIVE"
@@ -86,10 +86,12 @@ var (
 	Egress  = "EGRESS"
 	Accept  = "ACCEPT"
 	Drop    = "DROP"
-	TCP     = "TCP"
-	UDP     = "UDP"
-	ICMP6   = "ICMP6"
-	IP6     = "IP6"
+
+	TCP   = "TCP"
+	UDP   = "UDP"
+	ICMP6 = "ICMP6"
+
+	IP6 = "IP6"
 )
 
 var (

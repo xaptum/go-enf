@@ -37,6 +37,7 @@ func TestDnsTxtRecordJson(t *testing.T) {
 	name := "srv.local"
 	ttl := 300
 	zone := "zone-uuid-uuid"
+	typ := enf.DnsTXT
 
 	rec1 := &enf.DnsRecord{
 		Domain:     &domain,
@@ -44,7 +45,7 @@ func TestDnsTxtRecordJson(t *testing.T) {
 		Name:       &name,
 		Privileged: false,
 		Ttl:        &ttl,
-		Type:       &enf.DnsTXT,
+		Type:       &typ,
 		Value:      value,
 		ZoneId:     &zone,
 	}
@@ -76,6 +77,7 @@ func TestDnsAaaaRecordJson(t *testing.T) {
 	name := "srv.local"
 	ttl := 300
 	zone := "zone-uuid-uuid"
+	typ := enf.DnsAAAA
 
 	rec1 := &enf.DnsRecord{
 		Domain:     &domain,
@@ -83,7 +85,7 @@ func TestDnsAaaaRecordJson(t *testing.T) {
 		Name:       &name,
 		Privileged: false,
 		Ttl:        &ttl,
-		Type:       &enf.DnsAAAA,
+		Type:       &typ,
 		Value:      value,
 		ZoneId:     &zone,
 	}
@@ -115,6 +117,7 @@ func TestDnsCnameRecordJson(t *testing.T) {
 	name := "srv.local"
 	ttl := 300
 	zone := "zone-uuid-uuid"
+	typ := enf.DnsCNAME
 
 	rec1 := &enf.DnsRecord{
 		Domain:     &domain,
@@ -122,7 +125,7 @@ func TestDnsCnameRecordJson(t *testing.T) {
 		Name:       &name,
 		Privileged: false,
 		Ttl:        &ttl,
-		Type:       &enf.DnsCNAME,
+		Type:       &typ,
 		Value:      value,
 		ZoneId:     &zone,
 	}
@@ -157,6 +160,7 @@ func TestDnsSrvRecordJson(t *testing.T) {
 	name := "srv.local"
 	ttl := 300
 	zone := "zone-uuid-uuid"
+	typ := enf.DnsSRV
 
 	rec1 := &enf.DnsRecord{
 		Domain:     &domain,
@@ -164,7 +168,7 @@ func TestDnsSrvRecordJson(t *testing.T) {
 		Name:       &name,
 		Privileged: false,
 		Ttl:        &ttl,
-		Type:       &enf.DnsSRV,
+		Type:       &typ,
 		Value:      value,
 		ZoneId:     &zone,
 	}
