@@ -93,7 +93,7 @@ func (svc *FirewallService) DeleteRule(ctx context.Context, network, id string) 
 	path := FirewallApiPath(fmt.Sprintf("/%s/rule/%s", network, id))
 
 	// call the api
-	err := svc.client.Delete(ctx, path, nil)
+	err := svc.client.Delete(ctx, path)
 
 	// check if request failed
 	if nil != err {

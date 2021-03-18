@@ -90,7 +90,11 @@ func (client *Client) Put(ctx context.Context, path string, request interface{},
 	return client.processApiRespone(resp, err, result)
 }
 
-func (client *Client) Delete(ctx context.Context, path string, result interface{}) error {
+func (client *Client) Delete(ctx context.Context, path string) error {
+	return client.DeleteWithResult(ctx, path, nil)
+}
+
+func (client *Client) DeleteWithResult(ctx context.Context, path string, result interface{}) error {
 	// call the api
 	resp, err := client.rst.R().
 		SetContext(ctx).
